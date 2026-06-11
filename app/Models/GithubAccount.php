@@ -23,7 +23,11 @@ class GithubAccount extends Model
         return $this->belongsTo(User::class);
     }
     public function repositories()
-{
-    return $this->hasMany(Repository::class);
-}
+    {
+        return $this->hasMany(Repository::class);
+    }
+
+    protected $casts = [
+        'access_token' => 'encrypted',
+    ];
 }

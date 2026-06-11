@@ -4,10 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\GitHubController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\RepositoryController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
 
 Route::get('/auth/github', [GitHubController::class, 'redirect'])
     ->name('github.login');
@@ -37,3 +35,10 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return redirect('/auth/github');
 })->name('login');
+
+Route::get(
+    '/repositories/{repository}',
+    [RepositoryController::class, 'show']
+)
+->middleware('auth')
+->name('repositories.show');
