@@ -8,6 +8,7 @@ use App\Models\GithubAccount;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use App\Services\RepositorySyncService;
 
 class GitHubController extends Controller
 {
@@ -43,6 +44,8 @@ class GitHubController extends Controller
         );
 
         Auth::login($user);
+        app(RepositorySyncService::class)
+    ->sync($user->githubAccount);
 
         return redirect('/dashboard');
     }

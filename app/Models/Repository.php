@@ -23,4 +23,5 @@ class Repository extends Model
     {
         return $this->belongsTo(GithubAccount::class);
     }
+    
 }
