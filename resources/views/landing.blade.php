@@ -56,7 +56,7 @@
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-300 text-sm font-medium mb-8">
             <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
-            Powered by OpenRouter AI — Free tier, no credit card
+            Powered By Cross Multiple AI.
         </div>
 
         <h1 class="text-6xl sm:text-7xl font-black tracking-tight leading-[1.05] mb-6">
@@ -150,7 +150,7 @@
 
     {{-- Footer --}}
     <footer class="relative z-10 border-t border-white/[0.06] py-8 px-6 text-center text-slate-600 text-sm">
-        <p>GitRadar &copy; {{ date('Y') }} — AI Portfolio Analyzer · Built with Laravel &amp; OpenRouter</p>
+        <p>GitRadar &copy; {{ date('Y') }} — AI Portfolio Analyzer · Built with Laravel · Cross Multiple AI</p>
     </footer>
 
 </body>
