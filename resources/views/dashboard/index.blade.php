@@ -38,7 +38,7 @@
         <x-stat-card
             title="Repositories"
             :value="$totalRepos"
-            color="violet"
+            color="orange"
             :sub="$analyzedCount . ' analyzed'"
             icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>'
         />
@@ -53,7 +53,7 @@
         <x-stat-card
             title="Top Language"
             :value="$topLanguages->keys()->first() ?? 'N/A'"
-            color="blue"
+            color="violet"
             :sub="($topLanguages->first() ? $topLanguages->first() . ' repos' : '')"
             icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>'
         />
@@ -198,7 +198,7 @@
                     <tr class="hover:bg-[var(--bg-muted)] transition-colors duration-150">
                         <td class="px-5 py-4">
                             <a href="{{ route('repositories.show', $repo) }}"
-                               class="font-medium hover:text-violet-400 transition text-sm flex items-center gap-2">
+                               class="font-medium hover:text-orange-400 transition text-sm flex items-center gap-2">
                                 {{ $repo->name }}
                                 @if($repo->is_pinned)
                                 <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
@@ -254,8 +254,8 @@
         </div>
         @else
         <div class="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-8 text-center sm:p-16">
-            <div class="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-7 h-7 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mx-auto mb-4">
+                <svg class="w-7 h-7 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                 </svg>
             </div>

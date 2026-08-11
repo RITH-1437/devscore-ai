@@ -154,10 +154,10 @@
 
     {{-- ── GitHub Statistics ──────────────────────────────────────────────── --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <x-stat-card title="Followers" :value="number_format($stats['followers'])" color="violet"
+        <x-stat-card title="Followers" :value="number_format($stats['followers'])" color="orange"
             icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-3.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>' />
 
-        <x-stat-card title="Following" :value="number_format($stats['following'])" color="blue"
+        <x-stat-card title="Following" :value="number_format($stats['following'])" color="violet"
             icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>' />
 
         <x-stat-card title="Public Repositories" :value="number_format($stats['public_repos'])" color="emerald"
@@ -171,11 +171,11 @@
             sub="Across synced repositories"
             icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>' />
 
-        <x-stat-card title="Total Forks" :value="number_format($stats['total_forks'])" color="blue"
+        <x-stat-card title="Total Forks" :value="number_format($stats['total_forks'])" color="violet"
             sub="Across synced repositories"
             icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>' />
 
-        <x-stat-card title="Primary Language" :value="$stats['primary_language'] ?? 'N/A'" color="violet"
+        <x-stat-card title="Primary Language" :value="$stats['primary_language'] ?? 'N/A'" color="orange"
             icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>' />
 
         <x-stat-card title="GitHub Member Since" :value="$account->github_created_at?->format('M Y') ?? 'N/A'" color="emerald"
@@ -220,7 +220,7 @@
                     @php $maxLang = $topLanguages->max(); @endphp
                     @foreach($topLanguages->take(6) as $lang => $count)
                     @php
-                        $colors = ['bg-violet-500','bg-blue-500','bg-cyan-500','bg-emerald-500','bg-amber-500','bg-rose-500'];
+                        $colors = ['bg-orange-500','bg-violet-500','bg-emerald-500','bg-amber-500','bg-rose-500','bg-teal-500'];
                         $color  = $colors[$loop->index % count($colors)];
                         $pct    = $maxLang > 0 ? round(($count / $maxLang) * 100) : 0;
                     @endphp

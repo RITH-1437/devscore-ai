@@ -20,12 +20,12 @@ $rangeLabel = match (true) {
     default      => 'Weak',
 };
 
-$gradient = match (true) {
-    $score >= 90 => ['#059669', '#34d399'],
-    $score >= 75 => ['#0891b2', '#22d3ee'],
-    $score >= 60 => ['#2563eb', '#60a5fa'],
-    $score >= 40 => ['#d97706', '#fbbf24'],
-    default      => ['#dc2626', '#f87171'],
+$strokeColor = match (true) {
+    $score >= 90 => '#059669',
+    $score >= 75 => '#0891b2',
+    $score >= 60 => '#2563eb',
+    $score >= 40 => '#d97706',
+    default      => '#dc2626',
 };
 
 $textColor = match (true) {
@@ -44,23 +44,16 @@ $rangeColor = match (true) {
     default      => 'text-red-600 dark:text-red-400',
 };
 
-$uid = 'sr-' . str_replace('.', '', uniqid('', true));
 @endphp
 
 <div class="flex flex-col items-center gap-2">
     <div class="relative" style="width:{{ $size }}px;height:{{ $size }}px;" role="img" aria-label="Score {{ $score }} out of 100, {{ $rangeLabel }}">
         <svg width="{{ $size }}" height="{{ $size }}" class="-rotate-90" aria-hidden="true">
-            <defs>
-                <linearGradient id="{{ $uid }}" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="{{ $gradient[0] }}"/>
-                    <stop offset="100%" stop-color="{{ $gradient[1] }}"/>
-                </linearGradient>
-            </defs>
             <circle cx="{{ $size/2 }}" cy="{{ $size/2 }}" r="{{ $radius }}"
                     fill="none" stroke="var(--border-color)" stroke-width="{{ $stroke }}"/>
             <circle cx="{{ $size/2 }}" cy="{{ $size/2 }}" r="{{ $radius }}"
                     fill="none"
-                    stroke="url(#{{ $uid }})"
+                    stroke="{{ $strokeColor }}"
                     stroke-width="{{ $stroke }}"
                     stroke-linecap="round"
                     stroke-dasharray="{{ $circumference }}"

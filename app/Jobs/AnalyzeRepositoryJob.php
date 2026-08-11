@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Exceptions\AnalysisException;
+use App\Models\Analysis;
 use App\Models\Repository;
 use App\Models\User;
 use App\Services\RepositoryAnalysisService;
@@ -15,12 +17,10 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Runs the repository analysis pipeline.
+ * Runs the repository analysis pipeline asynchronously.
  *
- * Dispatched asynchronously when a queue worker is available
- * (`AnalyzeRepositoryJob::dispatch(...)`) or synchronously from the web
- * request (`AnalyzeRepositoryJob::dispatchSync(...)`) so analysis always
- * completes even without a running worker. All state transitions and
+ * Dispatched from the web request so the user gets an immediate response
+ * while OpenRouter calls run in the background. All state transitions and
  * persistence live in RepositoryAnalysisService.
  */
 class AnalyzeRepositoryJob implements ShouldQueue
@@ -28,13 +28,10 @@ class AnalyzeRepositoryJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /** @var int Maximum attempts before giving up */
-    public int $tries = 2;
+    public int $tries = 1;
 
-    /** @var int Timeout in seconds */
-    public int $timeout = 120;
-
-    /** @var int Seconds to wait before retrying */
-    public int $backoff = 10;
+    /** @var int Timeout in seconds — must exceed OpenRouter total_budget */
+    public int $timeout = 300;
 
     public function __construct(
         public readonly Repository $repository,
@@ -48,10 +45,33 @@ class AnalyzeRepositoryJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
-        Log::error('AnalyzeRepositoryJob: Exhausted all retries', [
+        Log::error('AnalyzeRepositoryJob: Job failed', [
             'repository' => $this->repository->name,
+            'repository_id' => $this->repository->id,
             'user_id'    => $this->user->id,
             'error'      => $exception->getMessage(),
         ]);
+
+        $this->repository->refresh();
+
+        if ($this->repository->analysis_status !== 'processing') {
+            return;
+        }
+
+        $this->repository->update([
+            'analysis_status'     => 'failed',
+            'analysis_started_at' => null,
+        ]);
+
+        Analysis::updateOrCreate(
+            [
+                'user_id'       => $this->user->id,
+                'repository_id' => $this->repository->id,
+            ],
+            [
+                'status'        => 'failed',
+                'error_message' => 'AI analysis was interrupted. Please try again. [' . AnalysisException::AI_UNKNOWN_ERROR . ']',
+            ]
+        );
     }
 }

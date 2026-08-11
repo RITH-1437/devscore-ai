@@ -54,6 +54,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{repository}', [RepositoryController::class, 'show'])
             ->name('show');
 
+        Route::get('/{repository}/analysis-status', [RepositoryController::class, 'analysisStatus'])
+            ->name('analysis-status');
+
         // AI Analysis — rate limited to 20 per minute per user
         Route::post('/{repository}/analyze', [RepositoryController::class, 'analyze'])
             ->name('analyze')

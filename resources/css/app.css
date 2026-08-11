@@ -34,14 +34,14 @@
     --border-color: #e2e8f0;
     --border-strong: #cbd5e1;
 
-    --primary: #7c3aed;
-    --primary-hover: #6d28d9;
-    --primary-soft: rgba(124, 58, 237, 0.08);
-    --primary-soft-border: rgba(124, 58, 237, 0.2);
+    --primary: #ea580c;
+    --primary-hover: #c2410c;
+    --primary-soft: rgba(234, 88, 12, 0.08);
+    --primary-soft-border: rgba(234, 88, 12, 0.2);
 
-    --secondary: #2563eb;
-    --secondary-soft: rgba(37, 99, 235, 0.08);
-    --secondary-soft-border: rgba(37, 99, 235, 0.2);
+    --secondary: #7c3aed;
+    --secondary-soft: rgba(124, 58, 237, 0.08);
+    --secondary-soft-border: rgba(124, 58, 237, 0.2);
 
     --success: #10b981;
     --success-soft: rgba(16, 185, 129, 0.08);
@@ -55,14 +55,14 @@
     --danger-soft: rgba(239, 68, 68, 0.08);
     --danger-soft-border: rgba(239, 68, 68, 0.2);
 
-    --info: #2563eb;
-    --info-soft: rgba(37, 99, 235, 0.08);
-    --info-soft-border: rgba(37, 99, 235, 0.2);
+    --info: #7c3aed;
+    --info-soft: rgba(124, 58, 237, 0.08);
+    --info-soft-border: rgba(124, 58, 237, 0.2);
 
     --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-    --glow-primary: rgba(124, 58, 237, 0.15);
-    --glow-secondary: rgba(37, 99, 235, 0.1);
+    --glow-primary: rgba(234, 88, 12, 0.15);
+    --glow-secondary: rgba(124, 58, 237, 0.1);
 
     /* Language colors - centralized system */
     --lang-php: #777bb4;
@@ -109,14 +109,14 @@
     --border-color: rgba(203, 213, 225, 0.1);
     --border-strong: rgba(203, 213, 225, 0.2);
 
-    --primary: #8b5cf6;
-    --primary-hover: #7c3aed;
-    --primary-soft: rgba(139, 92, 246, 0.1);
-    --primary-soft-border: rgba(139, 92, 246, 0.2);
+    --primary: #f97316;
+    --primary-hover: #fb923c;
+    --primary-soft: rgba(249, 115, 22, 0.1);
+    --primary-soft-border: rgba(249, 115, 22, 0.2);
 
-    --secondary: #3b82f6;
-    --secondary-soft: rgba(59, 130, 246, 0.1);
-    --secondary-soft-border: rgba(59, 130, 246, 0.2);
+    --secondary: #8b5cf6;
+    --secondary-soft: rgba(139, 92, 246, 0.1);
+    --secondary-soft-border: rgba(139, 92, 246, 0.2);
 
     --success: #22c55e;
     --success-soft: rgba(34, 197, 94, 0.1);
@@ -130,14 +130,14 @@
     --danger-soft: rgba(239, 68, 68, 0.1);
     --danger-soft-border: rgba(239, 68, 68, 0.2);
 
-    --info: #3b82f6;
-    --info-soft: rgba(59, 130, 246, 0.1);
-    --info-soft-border: rgba(59, 130, 246, 0.2);
+    --info: #8b5cf6;
+    --info-soft: rgba(139, 92, 246, 0.1);
+    --info-soft-border: rgba(139, 92, 246, 0.2);
 
     --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
-    --glow-primary: rgba(139, 92, 246, 0.2);
-    --glow-secondary: rgba(59, 130, 246, 0.15);
+    --glow-primary: rgba(249, 115, 22, 0.2);
+    --glow-secondary: rgba(139, 92, 246, 0.15);
 
     /* Language colors for dark mode - slightly brighter variants */
     --lang-php: #9d8df1;

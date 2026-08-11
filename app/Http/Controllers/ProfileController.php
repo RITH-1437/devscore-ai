@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Services\GithubService;
+use App\Services\GitHubService;
 use App\Services\PortfolioScoreService;
 use App\Support\PortfolioAssessment;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +19,7 @@ use RuntimeException;
 class ProfileController extends Controller
 {
     public function __construct(
-        private readonly GithubService $githubService,
+        private readonly GitHubService $githubService,
         private readonly PortfolioScoreService $portfolioScore,
     ) {}
 

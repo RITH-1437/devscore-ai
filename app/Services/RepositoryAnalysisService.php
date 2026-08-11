@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Orchestrates the full repository analysis pipeline:
  *
- *   Controller / Job → OpenRouter → response validation → persistence → cache.
+ *   Controller / Job → AiAnalysisService → response validation → persistence → cache.
  *
  * It is the ONLY place that decides how a repository transitions between the
  * pending / processing / completed / failed states and the only place that
@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Log;
 class RepositoryAnalysisService
 {
     public function __construct(
-        private readonly OpenRouterService $ai,
+        private readonly AiAnalysisService $ai,
     ) {}
 
     /**
@@ -36,8 +36,10 @@ class RepositoryAnalysisService
     public function analyze(Repository $repository, User $user): bool
     {
         $requestId = 'analyze_' . uniqid();
+        $timingStart = microtime(true);
+        $timingLabel = "[repo:{$repository->id}/{$repository->name}]";
 
-        Log::info('RepositoryAnalysisService: Starting analysis', [
+        Log::debug("{$timingLabel} [START] analysis +{$this->timingMs($timingStart)}ms", [
             'request_id'    => $requestId,
             'repository_id' => $repository->id,
             'repository'    => $repository->name,
@@ -50,16 +52,22 @@ class RepositoryAnalysisService
         ]);
 
         try {
-            $result = $this->ai->analyzeRepository($repository);
+            $result = $this->ai->analyzeRepository($repository, $timingStart, $timingLabel);
         } catch (AnalysisException $e) {
+            Log::debug("{$timingLabel} [END] analysis failed +{$this->timingMs($timingStart)}ms", [
+                'error_type' => $e->errorType,
+            ]);
             $this->markFailed($repository, $user, $e);
 
             return false;
         } catch (\Throwable $e) {
+            Log::debug("{$timingLabel} [END] analysis failed +{$this->timingMs($timingStart)}ms", [
+                'error_type' => AnalysisException::AI_UNKNOWN_ERROR,
+            ]);
             $this->markFailed(
                 $repository,
                 $user,
-                new AnalysisException($e->getMessage(), AnalysisException::UNKNOWN, 0, $e)
+                new AnalysisException($e->getMessage(), AnalysisException::AI_UNKNOWN_ERROR, 0, $e)
             );
 
             return false;
@@ -81,6 +89,8 @@ class RepositoryAnalysisService
             $result['_completion_tokens'],
             $result['_total_tokens']
         );
+
+        Log::debug("{$timingLabel} [DB] saving result +{$this->timingMs($timingStart)}ms");
 
         // Persist only after successful validation (done inside the service).
         $repository->update([
@@ -110,7 +120,7 @@ class RepositoryAnalysisService
 
         Cache::forget("portfolio_score_{$user->id}");
 
-        Log::info('RepositoryAnalysisService: Analysis completed', [
+        Log::info("{$timingLabel} [END] analysis completed +{$this->timingMs($timingStart)}ms", [
             'request_id'    => $requestId,
             'ai_request_id' => $aiRequestId,
             'repository'    => $repository->name,
@@ -120,6 +130,11 @@ class RepositoryAnalysisService
         ]);
 
         return true;
+    }
+
+    private function timingMs(float $start): string
+    {
+        return number_format((microtime(true) - $start) * 1000, 1, '.', '');
     }
 
     /**

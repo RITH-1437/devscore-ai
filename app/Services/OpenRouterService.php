@@ -6,6 +6,8 @@ namespace App\Services;
 
 use App\Exceptions\AnalysisException;
 use App\Models\Repository;
+use App\Services\Concerns\BuildsAnalysisPrompts;
+use App\Services\Concerns\ParsesAndValidatesAnalysisResponses;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -27,6 +29,9 @@ use Illuminate\Support\Str;
  */
 class OpenRouterService
 {
+    use BuildsAnalysisPrompts;
+    use ParsesAndValidatesAnalysisResponses;
+
     /** @var list<string> */
     private array $models;
 
@@ -43,23 +48,27 @@ class OpenRouterService
     public function __construct()
     {
         $this->apiKey        = (string) config('openrouter.api_key', '');
-        $this->timeout       = (int) config('openrouter.timeout', 60);
+        $this->timeout       = (int) config('openrouter.timeout', 45);
         $this->connectTimeout= (int) config('openrouter.connect_timeout', 10);
-        $this->maxRetries    = (int) config('openrouter.retry_times', 2);
-        $this->totalBudget   = (int) config('openrouter.total_budget', 120);
+        $this->maxRetries    = (int) config('openrouter.retry_times', 1);
+        $this->totalBudget   = (int) config('openrouter.total_budget', 180);
         $this->baseUrl       = (string) config('openrouter.base_url', 'https://openrouter.ai/api/v1');
         $this->temperature   = (float) config('openrouter.temperature', 0.2);
-        $this->maxTokens     = (int) config('openrouter.max_tokens', 4096);
+        $this->maxTokens     = (int) config('openrouter.max_tokens', 2048);
         $this->verifyModels  = (bool) config('openrouter.verify_models', false);
+        $this->maxReadmeChars      = (int) config('openrouter.payload.max_readme_chars', 3000);
+        $this->maxDescriptionChars = (int) config('openrouter.payload.max_description_chars', 500);
+        $this->maxPromptChars      = (int) config('openrouter.payload.max_prompt_chars', 10000);
 
-        // Build the model chain: OPENROUTER_MODEL env takes priority, then fall back to configured models
+        // Build the model chain:
         $defaultModel = (string) config('openrouter.default_model', '');
         $fallbackModels = (array) config('openrouter.models', [
-            'openai/gpt-4o-mini:free',
+            'google/gemini-2.0-flash-exp:free',
+            'inclusionai/ling-3.0-flash:free',
+            'nvidia/nemotron-nano-9b-v2:free',
+            'openai/gpt-oss-20b:free',
             'nvidia/nemotron-nano-12b-v2-vl:free',
-            'google/gemma-3-27b-it:free',
-            'qwen/qwen3-32b:free',
-            'meta-llama/llama-3.3-8b-instruct:free',
+            'openrouter/free',
         ]);
 
         // If OPENROUTER_MODEL is set, prepend it to the chain
@@ -84,18 +93,24 @@ class OpenRouterService
      * @return array<string, mixed>
      * @throws AnalysisException When no model could produce a valid response.
      */
-    public function analyzeRepository(Repository $repository): array
+    public function analyzeRepository(Repository $repository, ?float $timingStart = null, string $timingLabel = ''): array
     {
         $requestId = $this->generateRequestId();
-        $prompt    = $this->buildRepositoryPrompt($repository);
+        $timingStart ??= microtime(true);
+        if ($timingLabel === '') {
+            $timingLabel = "[repo:{$repository->id}/{$repository->name}]";
+        }
 
-        Log::info('OpenRouter: Starting repository analysis', [
+        Log::debug("{$timingLabel} [PROMPT] building prompt +{$this->timingMs($timingStart)}ms");
+        $prompt = $this->buildRepositoryPrompt($repository);
+
+        Log::debug("{$timingLabel} [PROMPT] built +{$this->timingMs($timingStart)}ms", [
             'request_id'   => $requestId,
             'repository'   => $repository->name,
             'prompt_chars' => strlen($prompt),
         ]);
 
-        [$result, $modelUsed, $rawResponse, $tokens] = $this->callWithFallback($requestId, $prompt);
+        [$result, $modelUsed, $rawResponse, $tokens] = $this->callWithFallback($requestId, $prompt, $timingStart, $timingLabel);
 
         return array_merge($result, [
             '_model_used'        => $modelUsed,
@@ -138,125 +153,6 @@ class OpenRouterService
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // Prompt Builders
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    private function buildRepositoryPrompt(Repository $repository): string
-    {
-        $topics  = implode(', ', $repository->topics ?? []);
-        $readme  = mb_substr($repository->readme ?? 'Not available', 0, 6000);
-        $license = $repository->license ?? 'Not specified';
-        $lastPushed = $repository->pushed_at?->toDateString() ?? 'Unknown';
-        $createdAt = $repository->github_created_at?->toDateString() ?? 'Unknown';
-
-        return <<<PROMPT
-You are a senior software engineer, technical recruiter, and portfolio analyst reviewing a GitHub repository.
-
-Analyze this repository thoroughly and return ONLY valid JSON. No markdown code blocks, no explanations, no preamble — just raw JSON.
-
-Repository Details:
-- Name: {$repository->name}
-- Full Name: {$repository->full_name}
-- Description: {$repository->description}
-- Primary Language: {$repository->language}
-- Stars: {$repository->stars}
-- Forks: {$repository->forks}
-- Open Issues: {$repository->open_issues}
-- Watchers: {$repository->watchers}
-- Size (KB): {$repository->size}
-- Topics: {$topics}
-- License: {$license}
-- Is Fork: {$this->bool($repository->is_fork)}
-- Is Archived: {$this->bool($repository->is_archived)}
-- Last Pushed: {$lastPushed}
-- Created: {$createdAt}
-
-README (first 6000 chars):
-{$readme}
-
-Return this exact JSON structure. All fields are required — do not omit any field:
-
-{
-  "score": <integer 0-100>,
-  "difficulty": "<beginner|intermediate|advanced|expert>",
-  "portfolio_level": "<junior|mid|senior|staff|principal>",
-  "recruiter_rating": <integer 1-10>,
-  "estimated_experience": "<e.g., 0-1 years, 1-3 years, 3-5 years, 5+ years>",
-  "hiring_probability": <integer 0-100>,
-  "market_readiness": "<not-ready|emerging|ready|production-grade>",
-  "strengths": ["<string>", "<string>", ...],
-  "weaknesses": ["<string>", "<string>", ...],
-  "recommendations": ["<string>", "<string>", ...],
-  "architecture_review": ["<string>", "<string>", ...],
-  "security_review": ["<string>", "<string>", ...],
-  "performance_review": ["<string>", "<string>", ...],
-  "code_style_review": ["<string>", "<string>", ...],
-  "missing_features": ["<string>", "<string>", ...],
-  "resume_suggestions": ["<string>", "<string>", ...],
-  "cv_suggestions": ["<string>", "<string>", ...],
-  "linkedin_suggestions": ["<string>", "<string>", ...],
-  "interview_questions": ["<string>", "<string>", ...],
-  "best_companies": ["<string>", "<string>", ...],
-  "improvement_roadmap": ["<string>", "<string>", ...]
-}
-
-CRITICAL: Return ONLY the JSON object. No text before or after.
-PROMPT;
-    }
-
-    /**
-     * @param  \Illuminate\Support\Collection<int, Repository>  $repositories
-     */
-    private function buildPortfolioPrompt(\Illuminate\Support\Collection $repositories): string
-    {
-        $repoList = $repositories->map(function (Repository $r) {
-            return "- {$r->name} ({$r->language}, ⭐{$r->stars}): " . ($r->description ?? 'No description');
-        })->implode("\n");
-
-        $totalRepos  = $repositories->count();
-        $totalStars  = $repositories->sum('stars');
-        $totalForks  = $repositories->sum('forks');
-        $languages   = $repositories->pluck('language')->filter()->unique()->implode(', ');
-
-        return <<<PROMPT
-You are a senior software engineer and technical recruiter reviewing a developer's complete GitHub portfolio.
-
-Analyze the portfolio and return ONLY valid JSON. No markdown, no code blocks, no explanations.
-
-Portfolio Summary:
-- Total Repositories: {$totalRepos}
-- Total Stars: {$totalStars}
-- Total Forks: {$totalForks}
-- Languages Used: {$languages}
-
-Repositories:
-{$repoList}
-
-Return this exact JSON structure (all fields required):
-
-{
-  "score": <integer 0-100>,
-  "portfolio_level": "<junior|mid|senior|staff|principal>",
-  "estimated_experience": "<e.g., 0-1 years, 1-3 years, 3-5 years, 5+ years>",
-  "hiring_probability": <integer 0-100>,
-  "market_readiness": "<not-ready|emerging|ready|production-grade>",
-  "recruiter_rating": <integer 1-10>,
-  "strengths": ["<string>", ...],
-  "weaknesses": ["<string>", ...],
-  "recommendations": ["<string>", ...],
-  "missing_features": ["<string>", ...],
-  "resume_suggestions": ["<string>", ...],
-  "cv_suggestions": ["<string>", ...],
-  "linkedin_suggestions": ["<string>", ...],
-  "best_companies": ["<string>", ...],
-  "improvement_roadmap": ["<string>", ...]
-}
-
-CRITICAL: Return ONLY the JSON object.
-PROMPT;
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
     // Core HTTP + Fallback Logic
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -267,8 +163,9 @@ PROMPT;
      * @return array{0: array<string, mixed>, 1: string, 2: string, 3: array<string, int>}
      * @throws AnalysisException When every model fails or the budget is exhausted.
      */
-    private function callWithFallback(string $requestId, string $prompt): array
+    private function callWithFallback(string $requestId, string $prompt, ?float $timingStart = null, string $timingLabel = ''): array
     {
+        $timingStart ??= microtime(true);
         $deadline = microtime(true) + max(1, $this->totalBudget);
 
         $models = $this->verifyModels ? $this->filterAvailableModels($this->models) : $this->models;
@@ -277,7 +174,7 @@ PROMPT;
         if (empty($models)) {
             throw new AnalysisException(
                 'None of the configured OpenRouter models are currently available.',
-                AnalysisException::NO_MODELS_AVAILABLE
+                AnalysisException::AI_NO_MODELS_AVAILABLE
             );
         }
 
@@ -287,30 +184,30 @@ PROMPT;
             'verify_models' => $this->verifyModels,
         ]);
 
-        $lastType    = AnalysisException::UNKNOWN;
+        $lastType    = AnalysisException::AI_UNKNOWN_ERROR;
         $lastMessage = 'No models available.';
         $rawResponse = '';
 
         foreach ($models as $model) {
             if (microtime(true) > $deadline) {
-                Log::warning('OpenRouter: Budget exhausted', [
+                Log::warning("{$timingLabel} [AI] budget exhausted +{$this->timingMs($timingStart)}ms", [
                     'request_id' => $requestId,
                     'budget'     => $this->totalBudget,
                 ]);
                 break;
             }
 
-            Log::debug('OpenRouter: Trying model', [
+            Log::debug("{$timingLabel} [AI] model fallback trying +{$this->timingMs($timingStart)}ms", [
                 'request_id' => $requestId,
                 'model'      => $model,
             ]);
 
             try {
-                [$raw, $tokens] = $this->callModelWithRetry($requestId, $model, $prompt);
+                [$raw, $tokens] = $this->callModelWithRetry($requestId, $model, $prompt, $timingStart, $timingLabel);
                 $rawResponse = $raw;
 
                 if (empty($raw)) {
-                    $lastType    = AnalysisException::EMPTY_RESPONSE;
+                    $lastType    = AnalysisException::AI_EMPTY_RESPONSE;
                     $lastMessage = "Empty response from model: {$model}";
                     Log::warning('OpenRouter: Empty response', [
                         'request_id' => $requestId,
@@ -319,10 +216,10 @@ PROMPT;
                     continue;
                 }
 
-                $parsed = $this->parseJson($raw);
+                $parsed = $this->parseJson($raw, 'OpenRouter');
 
                 if ($parsed === null) {
-                    $lastType    = AnalysisException::INVALID_RESPONSE;
+                    $lastType    = AnalysisException::AI_PARSE_ERROR;
                     $lastMessage = "Invalid JSON from model: {$model}";
                     Log::warning('OpenRouter: Invalid JSON from model', [
                         'request_id'     => $requestId,
@@ -335,7 +232,7 @@ PROMPT;
                 // Validate & normalize before returning to the caller.
                 $validated = $this->validateResult($parsed);
 
-                Log::info('OpenRouter: Analysis successful', [
+                Log::debug("{$timingLabel} [AI] response received +{$this->timingMs($timingStart)}ms", [
                     'request_id'     => $requestId,
                     'model'          => $model,
                     'tokens_used'    => $tokens['total_tokens'] ?? 0,
@@ -348,25 +245,27 @@ PROMPT;
                 $lastType    = $e->errorType;
                 $lastMessage = $e->getMessage();
 
-                Log::warning('OpenRouter: Model failed, trying next', [
+                Log::warning("{$timingLabel} [AI] model fallback failed +{$this->timingMs($timingStart)}ms", [
                     'request_id' => $requestId,
                     'model'      => $model,
                     'error_type' => $e->errorType,
                     'error'      => $lastMessage,
                 ]);
 
-                // Do not waste budget on a model that is rate-limited or missing.
+                // Do not waste budget on errors that won't succeed on retry.
                 if (in_array($e->errorType, [
-                    AnalysisException::RATE_LIMIT,
-                    AnalysisException::MODEL_UNAVAILABLE,
-                    AnalysisException::AUTH_ERROR,
-                    AnalysisException::INSUFFICIENT_CREDITS,
+                    AnalysisException::AI_RATE_LIMIT,
+                    AnalysisException::AI_MODEL_UNAVAILABLE,
+                    AnalysisException::AI_AUTH_ERROR,
+                    AnalysisException::AI_INSUFFICIENT_CREDITS,
+                    AnalysisException::AI_TIMEOUT,
+                    AnalysisException::AI_CONFIGURATION_ERROR,
+                    AnalysisException::AI_NETWORK_ERROR,
                 ], true)) {
                     continue;
                 }
             } catch (\Throwable $e) {
-                // Catch HTTP client exceptions (timeouts, connection errors)
-                $lastType    = AnalysisException::TIMEOUT;
+                $lastType    = AnalysisException::AI_NETWORK_ERROR;
                 $lastMessage = "Model {$model} failed: " . $e->getMessage();
 
                 Log::warning('OpenRouter: Model threw exception, trying next', [
@@ -395,8 +294,9 @@ PROMPT;
      * @return array{0: string, 1: array<string, int>}
      * @throws AnalysisException
      */
-    private function callModelWithRetry(string $requestId, string $model, string $prompt): array
+    private function callModelWithRetry(string $requestId, string $model, string $prompt, ?float $timingStart = null, string $timingLabel = ''): array
     {
+        $timingStart ??= microtime(true);
         $attempt        = 0;
         $lastException  = null;
 
@@ -405,7 +305,7 @@ PROMPT;
             $backoffSeconds = pow(2, $attempt - 1); // 1s, 2s, 4s
 
             try {
-                return $this->callModel($requestId, $model, $prompt);
+                return $this->callModel($requestId, $model, $prompt, $timingStart, $timingLabel);
             } catch (AnalysisException $e) {
                 $lastException = $e;
 
@@ -416,12 +316,15 @@ PROMPT;
                     'backoff_s'  => $backoffSeconds,
                 ]);
 
-                // Some errors are pointless to retry.
+                // Some errors are pointless to retry on the same model.
                 if (in_array($e->errorType, [
-                    AnalysisException::RATE_LIMIT,
-                    AnalysisException::MODEL_UNAVAILABLE,
-                    AnalysisException::AUTH_ERROR,
-                    AnalysisException::INSUFFICIENT_CREDITS,
+                    AnalysisException::AI_RATE_LIMIT,
+                    AnalysisException::AI_MODEL_UNAVAILABLE,
+                    AnalysisException::AI_AUTH_ERROR,
+                    AnalysisException::AI_INSUFFICIENT_CREDITS,
+                    AnalysisException::AI_TIMEOUT,
+                    AnalysisException::AI_CONFIGURATION_ERROR,
+                    AnalysisException::AI_NETWORK_ERROR,
                 ], true)) {
                     throw $e;
                 }
@@ -432,7 +335,7 @@ PROMPT;
             }
         }
 
-        throw $lastException ?? new AnalysisException('Max retries exceeded', AnalysisException::UNKNOWN);
+        throw $lastException ?? new AnalysisException('Max retries exceeded', AnalysisException::AI_UNKNOWN_ERROR);
     }
 
     /**
@@ -441,24 +344,22 @@ PROMPT;
      * @return array{0: string, 1: array<string, int>}
      * @throws AnalysisException
      */
-    private function callModel(string $requestId, string $model, string $prompt): array
+    private function callModel(string $requestId, string $model, string $prompt, ?float $timingStart = null, string $timingLabel = ''): array
     {
+        $timingStart ??= microtime(true);
         if ($this->apiKey === '') {
             throw new AnalysisException(
                 'OPENROUTER_API_KEY is not configured.',
-                AnalysisException::AUTH_ERROR
+                AnalysisException::AI_CONFIGURATION_ERROR
             );
         }
 
-        Log::debug('OpenRouter: Making API request', [
-            'request_id'  => $requestId,
-            'model'       => $model,
-            'base_url'    => $this->baseUrl,
-            'temperature' => $this->temperature,
-            'max_tokens'  => $this->maxTokens,
-            'timeout'     => $this->timeout,
-            'connect_timeout' => $this->connectTimeout,
-            'prompt_length' => strlen($prompt),
+        Log::debug("{$timingLabel} [AI] request started +{$this->timingMs($timingStart)}ms", [
+            'request_id'    => $requestId,
+            'model'         => $model,
+            'prompt_chars'  => strlen($prompt),
+            'timeout_s'     => $this->timeout,
+            'connect_timeout_s' => $this->connectTimeout,
         ]);
 
         try {
@@ -482,15 +383,19 @@ PROMPT;
                     'max_tokens'  => $this->maxTokens,
                 ]);
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::error('OpenRouter: Connection failed', [
+            $isTimeout = str_contains($e->getMessage(), 'timed out')
+                || str_contains($e->getMessage(), 'timeout');
+
+            Log::error("{$timingLabel} [AI] connection failed +{$this->timingMs($timingStart)}ms", [
                 'request_id' => $requestId,
                 'model'      => $model,
                 'error'      => $e->getMessage(),
+                'is_timeout' => $isTimeout,
             ]);
 
             throw new AnalysisException(
                 "Connection to OpenRouter failed for model {$model}: " . $e->getMessage(),
-                AnalysisException::TIMEOUT,
+                $isTimeout ? AnalysisException::AI_TIMEOUT : AnalysisException::AI_NETWORK_ERROR,
                 0,
                 $e
             );
@@ -509,7 +414,7 @@ PROMPT;
             if (str_contains($e->getMessage(), 'timed out') || str_contains($e->getMessage(), 'timeout')) {
                 throw new AnalysisException(
                     "Request timeout for model {$model}: " . $e->getMessage(),
-                    AnalysisException::TIMEOUT,
+                    AnalysisException::AI_TIMEOUT,
                     $status,
                     $e
                 );
@@ -517,7 +422,7 @@ PROMPT;
 
             throw new AnalysisException(
                 "HTTP request failed for model {$model}: " . $e->getMessage(),
-                AnalysisException::SERVER_ERROR,
+                AnalysisException::AI_NETWORK_ERROR,
                 $status,
                 $e
             );
@@ -531,7 +436,7 @@ PROMPT;
 
             throw new AnalysisException(
                 "Unexpected error calling model {$model}: " . $e->getMessage(),
-                AnalysisException::UNKNOWN,
+                AnalysisException::AI_UNKNOWN_ERROR,
                 0,
                 $e
             );
@@ -558,7 +463,7 @@ PROMPT;
 
             throw new AnalysisException(
                 "Rate limited on model: {$model}",
-                AnalysisException::RATE_LIMIT,
+                AnalysisException::AI_RATE_LIMIT,
                 $status
             );
         }
@@ -568,12 +473,11 @@ PROMPT;
                 'request_id' => $requestId,
                 'model'      => $model,
                 'status'     => $status,
-                'api_key_prefix' => substr($this->apiKey, 0, 10) . '...',
             ]);
 
             throw new AnalysisException(
                 'Invalid API key',
-                AnalysisException::AUTH_ERROR,
+                AnalysisException::AI_AUTH_ERROR,
                 $status
             );
         }
@@ -588,7 +492,7 @@ PROMPT;
 
             throw new AnalysisException(
                 "Insufficient credits for model: {$model}",
-                AnalysisException::INSUFFICIENT_CREDITS,
+                AnalysisException::AI_INSUFFICIENT_CREDITS,
                 $status
             );
         }
@@ -604,7 +508,7 @@ PROMPT;
 
             throw new AnalysisException(
                 "Model not available: {$model}",
-                AnalysisException::MODEL_UNAVAILABLE,
+                AnalysisException::AI_MODEL_UNAVAILABLE,
                 $status
             );
         }
@@ -620,7 +524,7 @@ PROMPT;
 
             throw new AnalysisException(
                 "HTTP {$status} from OpenRouter for model {$model}: " . $errorBody,
-                AnalysisException::SERVER_ERROR,
+                AnalysisException::AI_SERVER_ERROR,
                 $status
             );
         }
@@ -636,7 +540,7 @@ PROMPT;
 
             throw new AnalysisException(
                 "HTTP {$status} from OpenRouter for model {$model}: " . $errorBody,
-                AnalysisException::UNKNOWN,
+                AnalysisException::AI_UNKNOWN_ERROR,
                 $status
             );
         }
@@ -663,7 +567,7 @@ PROMPT;
 
             throw new AnalysisException(
                 "Invalid response structure from model {$model}: missing 'choices' array",
-                AnalysisException::INVALID_RESPONSE,
+                AnalysisException::AI_INVALID_RESPONSE,
                 $status
             );
         }
@@ -677,7 +581,7 @@ PROMPT;
 
             throw new AnalysisException(
                 "Empty choices array from model {$model}",
-                AnalysisException::EMPTY_RESPONSE,
+                AnalysisException::AI_EMPTY_RESPONSE,
                 $status
             );
         }
@@ -692,7 +596,7 @@ PROMPT;
 
             throw new AnalysisException(
                 "Invalid choice structure from model {$model}: missing 'message'",
-                AnalysisException::INVALID_RESPONSE,
+                AnalysisException::AI_INVALID_RESPONSE,
                 $status
             );
         }
@@ -708,7 +612,7 @@ PROMPT;
 
             throw new AnalysisException(
                 "Empty content from model {$model}",
-                AnalysisException::EMPTY_RESPONSE,
+                AnalysisException::AI_EMPTY_RESPONSE,
                 $status
             );
         }
@@ -831,167 +735,6 @@ PROMPT;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // JSON Parsing & Recovery
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Attempt to parse JSON with multiple recovery strategies.
-     *
-     * @return array<string, mixed>|null
-     */
-    private function parseJson(string $content): ?array
-    {
-        Log::debug('OpenRouter: Parsing JSON', [
-            'content_length' => strlen($content),
-            'content_start'  => substr($content, 0, 100),
-        ]);
-
-        // Strategy 1: Strip markdown code blocks
-        $cleaned = preg_replace('/^```(?:json)?\s*/m', '', $content) ?? $content;
-        $cleaned = preg_replace('/^```\s*$/m', '', $cleaned) ?? $cleaned;
-        $cleaned = trim($cleaned);
-
-        // Strategy 2: Direct decode
-        $decoded = json_decode($cleaned, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            Log::debug('OpenRouter: JSON parsed successfully (direct decode)');
-            return $decoded;
-        }
-
-        Log::debug('OpenRouter: Direct decode failed', [
-            'error' => json_last_error_msg(),
-        ]);
-
-        // Strategy 3: Extract JSON object via regex (greedy match)
-        if (preg_match('/(\{[\s\S]*\})/s', $content, $matches)) {
-            $decoded = json_decode($matches[1], true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                Log::debug('OpenRouter: JSON parsed successfully (regex extraction)');
-                return $decoded;
-            }
-
-            Log::debug('OpenRouter: Regex extraction decode failed', [
-                'error' => json_last_error_msg(),
-                'extracted' => substr($matches[1], 0, 200),
-            ]);
-        }
-
-        // Strategy 4: Fix trailing commas
-        $fixed = preg_replace('/,\s*([\]}])/s', '$1', $content) ?? $content;
-        $decoded = json_decode($fixed, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            Log::debug('OpenRouter: JSON parsed successfully (trailing comma fix)');
-            return $decoded;
-        }
-
-        // Strategy 5: Try to complete truncated JSON
-        if (substr_count($content, '{') > substr_count($content, '}')) {
-            $fixed = $content . str_repeat('}', substr_count($content, '{') - substr_count($content, '}'));
-            $decoded = json_decode($fixed, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                Log::debug('OpenRouter: JSON parsed successfully (truncation fix)');
-                return $decoded;
-            }
-        }
-
-        Log::warning('OpenRouter: All JSON parsing strategies failed', [
-            'content_length' => strlen($content),
-            'content'        => substr($content, 0, 500),
-            'last_error'     => json_last_error_msg(),
-        ]);
-
-        return null;
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Validation & Normalization
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    /** @var list<string> */
-    private const STRING_FIELDS = [
-        'difficulty',
-        'portfolio_level',
-        'estimated_experience',
-        'market_readiness',
-    ];
-
-    /** @var list<string> */
-    private const INT_FIELDS = [
-        'recruiter_rating',
-        'hiring_probability',
-    ];
-
-    /** @var list<string> */
-    private const ARRAY_FIELDS = [
-        'strengths',
-        'weaknesses',
-        'recommendations',
-        'architecture_review',
-        'security_review',
-        'performance_review',
-        'code_style_review',
-        'missing_features',
-        'resume_suggestions',
-        'cv_suggestions',
-        'linkedin_suggestions',
-        'interview_questions',
-        'best_companies',
-        'improvement_roadmap',
-    ];
-
-    /**
-     * Validate and normalize an AI response. Throws AnalysisException when the
-     * response is structurally invalid (e.g. missing a numeric score), so we
-     * never persist a fake or corrupt analysis.
-     *
-     * @param  array<string, mixed>  $result
-     * @return array<string, mixed>
-     * @throws AnalysisException
-     */
-    private function validateResult(array $result): array
-    {
-        if (! array_key_exists('score', $result) || ! is_numeric($result['score'])) {
-            throw new AnalysisException(
-                'AI response did not include a numeric score.',
-                AnalysisException::INVALID_RESPONSE
-            );
-        }
-
-        $normalized = $result;
-
-        $score = max(0, min(100, (int) round((float) $result['score'])));
-        $normalized['score'] = $score;
-
-        foreach (self::STRING_FIELDS as $field) {
-            $value = $result[$field] ?? null;
-            $normalized[$field] = (is_string($value) && $value !== '') ? $value : null;
-        }
-
-        foreach (self::INT_FIELDS as $field) {
-            $value = $result[$field] ?? null;
-            $normalized[$field] = is_numeric($value)
-                ? max(0, min($field === 'recruiter_rating' ? 10 : 100, (int) round((float) $value)))
-                : null;
-        }
-
-        foreach (self::ARRAY_FIELDS as $field) {
-            $items = $result[$field] ?? [];
-            if (is_string($items)) {
-                $items = [$items];
-            }
-            if (! is_array($items)) {
-                $items = [];
-            }
-            $normalized[$field] = array_values(array_filter(
-                $items,
-                fn ($item) => is_string($item) && trim($item) !== ''
-            ));
-        }
-
-        return $normalized;
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
     // Utilities
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1000,8 +743,8 @@ PROMPT;
         return 'req_' . Str::random(16);
     }
 
-    private function bool(?bool $value): string
+    private function timingMs(float $start): string
     {
-        return $value ? 'Yes' : 'No';
+        return number_format((microtime(true) - $start) * 1000, 1, '.', '');
     }
 }

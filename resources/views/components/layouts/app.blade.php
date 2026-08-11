@@ -16,13 +16,20 @@
                     document.documentElement.classList.add('dark');
                 }
                 document.documentElement.setAttribute('data-theme-pref', stored);
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+                    try {
+                        var pref = localStorage.getItem('gitradar-theme') || localStorage.getItem('devscore-theme') || 'light';
+                        if (pref !== 'system') return;
+                        document.documentElement.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    } catch (e) {}
+                });
             } catch (e) { /* localStorage unavailable — fall back to light */ }
         })();
     </script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="GitRadar - AI Portfolio Analyzer for GitHub. Get instant scores, recruiter insights, and career recommendations.">
+    <meta name="description" content="GitRadar - AI Portfolio Analyzer for GitHub. Get scores in 3-5 minutes, recruiter insights, and career recommendations.">
     <meta property="og:title" content="{{ config('app.name', 'GitRadar') }}{{ isset($title) ? ' — ' . $title : '' }}">
     <meta property="og:description" content="AI Portfolio Analyzer for GitHub developers">
     <meta property="og:type" content="website">

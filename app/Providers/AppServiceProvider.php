@@ -6,7 +6,9 @@ namespace App\Providers;
 
 use App\Models\Repository;
 use App\Policies\RepositoryPolicy;
+use App\Services\AiAnalysisService;
 use App\Services\GitHubService;
+use App\Services\GoogleGeminiService;
 use App\Services\OpenRouterService;
 use App\Services\PortfolioScoreService;
 use App\Services\RepositoryAnalysisService;
@@ -24,7 +26,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register services as singletons so they are only instantiated once per request
         $this->app->singleton(GitHubService::class);
+        $this->app->singleton(GoogleGeminiService::class);
         $this->app->singleton(OpenRouterService::class);
+        $this->app->singleton(AiAnalysisService::class);
         $this->app->singleton(PortfolioScoreService::class);
         $this->app->singleton(RepositoryAnalysisService::class);
         $this->app->singleton(RepositorySyncService::class);

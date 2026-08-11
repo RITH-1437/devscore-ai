@@ -174,11 +174,11 @@ class Repository extends Model
     public function getScoreGradientAttribute(): string
     {
         return match (true) {
-            $this->score >= 90 => 'from-emerald-500 to-teal-500',
-            $this->score >= 75 => 'from-cyan-500 to-blue-500',
-            $this->score >= 60 => 'from-blue-500 to-cyan-500',
-            $this->score >= 40 => 'from-amber-500 to-orange-500',
-            default            => 'from-red-500 to-pink-500',
+            $this->score >= 90 => 'bg-emerald-500',
+            $this->score >= 75 => 'bg-cyan-500',
+            $this->score >= 60 => 'bg-blue-500',
+            $this->score >= 40 => 'bg-amber-500',
+            default            => 'bg-red-500',
         };
     }
 }

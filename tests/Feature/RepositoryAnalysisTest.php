@@ -20,20 +20,21 @@ class RepositoryAnalysisTest extends TestCase
         parent::setUp();
 
         config([
+            'gemini.api_key'            => '',
             'openrouter.api_key'        => 'sk-test-key',
             'openrouter.timeout'        => 2,
             'openrouter.connect_timeout'=> 1,
             'openrouter.retry_times'    => 0,
             'openrouter.total_budget'   => 5,
             'openrouter.verify_models'  => true,
-            'openrouter.models'         => ['openai/gpt-4o-mini:free'],
+            'openrouter.models'         => ['google/gemma-3-27b-it:free'],
         ]);
 
         Cache::flush();
 
         Http::fake([
             'openrouter.ai/api/v1/models' => Http::response([
-                'data' => [['id' => 'openai/gpt-4o-mini:free']],
+                'data' => [['id' => 'google/gemma-3-27b-it:free']],
             ], 200),
         ]);
     }
@@ -77,7 +78,7 @@ class RepositoryAnalysisTest extends TestCase
         return [$user, $repo];
     }
 
-    public function test_analyze_runs_synchronously_and_persists_results(): void
+    public function test_analyze_dispatches_job_and_persists_results(): void
     {
         [$user, $repo] = $this->setupUser();
 
@@ -103,7 +104,7 @@ class RepositoryAnalysisTest extends TestCase
             ->post(route('repositories.analyze', $repo));
 
         $response->assertRedirect(route('repositories.show', $repo));
-        $response->assertSessionHas('success');
+        $response->assertSessionHas('info');
 
         $repo->refresh();
         $this->assertTrue($repo->isAnalyzed());
@@ -130,7 +131,7 @@ class RepositoryAnalysisTest extends TestCase
             ->post(route('repositories.analyze', $repo));
 
         $response->assertRedirect(route('repositories.show', $repo));
-        $response->assertSessionHas('error');
+        $response->assertSessionHas('info');
 
         $repo->refresh();
         $this->assertTrue($repo->hasFailed());
@@ -190,6 +191,27 @@ class RepositoryAnalysisTest extends TestCase
         $this->assertSame(60, $repo->ai_analysis['score']);
     }
 
+    public function test_analysis_status_endpoint_returns_json(): void
+    {
+        [$user, $repo] = $this->setupUser();
+
+        $repo->update([
+            'analysis_status' => 'processing',
+            'analysis_started_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson(route('repositories.analysis-status', $repo));
+
+        $response->assertOk();
+        $response->assertJson([
+            'status'       => 'processing',
+            'is_analyzing' => true,
+            'is_analyzed'  => false,
+            'has_failed'   => false,
+        ]);
+    }
+
     public function test_unanalyzed_repo_cannot_be_exported(): void
     {
         [$user, $repo] = $this->setupUser();
@@ -201,5 +223,36 @@ class RepositoryAnalysisTest extends TestCase
         $this->actingAs($user)
             ->get(route('repositories.export.markdown', $repo))
             ->assertNotFound();
+    }
+
+    public function test_analyze_uses_gemini_when_api_key_is_set(): void
+    {
+        config(['gemini.api_key' => 'test-gemini-key', 'gemini.models' => ['gemini-2.5-flash']]);
+
+        [$user, $repo] = $this->setupUser();
+
+        Http::fake([
+            'generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [
+                    ['content' => ['parts' => [['text' => json_encode([
+                        'score' => 88,
+                        'strengths' => ['Good structure'],
+                        'weaknesses' => [],
+                        'recommendations' => [],
+                    ])]]]],
+                ],
+            ], 200),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('repositories.analyze', $repo))
+            ->assertRedirect(route('repositories.show', $repo));
+
+        $repo->refresh();
+        $this->assertSame('completed', $repo->analysis_status);
+        $this->assertSame(88, $repo->ai_analysis['score']);
+
+        $analysis = Analysis::where('repository_id', $repo->id)->first();
+        $this->assertSame('gemini/gemini-2.5-flash', $analysis->model_used);
     }
 }

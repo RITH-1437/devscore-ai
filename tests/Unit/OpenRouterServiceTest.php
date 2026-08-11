@@ -23,7 +23,7 @@ class OpenRouterServiceTest extends TestCase
             'openrouter.retry_times'    => 0,
             'openrouter.total_budget'   => 5,
             'openrouter.verify_models'  => true,
-            'openrouter.models'         => ['openai/gpt-4o-mini:free', 'google/gemma-3-27b-it:free'],
+            'openrouter.models'         => ['google/gemma-3-27b-it:free', 'openai/gpt-4o-mini:free'],
         ]);
 
         Cache::flush();
@@ -32,8 +32,8 @@ class OpenRouterServiceTest extends TestCase
         Http::fake([
             'openrouter.ai/api/v1/models' => Http::response([
                 'data' => [
-                    ['id' => 'openai/gpt-4o-mini:free'],
                     ['id' => 'google/gemma-3-27b-it:free'],
+                    ['id' => 'openai/gpt-4o-mini:free'],
                 ],
             ], 200),
         ]);
@@ -88,7 +88,7 @@ class OpenRouterServiceTest extends TestCase
         $this->assertSame(86, $result['score']);
         $this->assertSame(['No CI'], $result['weaknesses']);
         $this->assertSame('intermediate', $result['difficulty']);
-        $this->assertSame('openai/gpt-4o-mini:free', $result['_model_used']);
+        $this->assertSame('google/gemma-3-27b-it:free', $result['_model_used']);
         $this->assertSame(30, $result['_total_tokens']);
     }
 
@@ -118,7 +118,7 @@ class OpenRouterServiceTest extends TestCase
         try {
             app(OpenRouterService::class)->analyzeRepository($this->repository());
         } catch (AnalysisException $e) {
-            $this->assertSame(AnalysisException::MODEL_UNAVAILABLE, $e->errorType);
+            $this->assertSame(AnalysisException::AI_MODEL_UNAVAILABLE, $e->errorType);
             throw $e;
         }
     }
@@ -131,7 +131,7 @@ class OpenRouterServiceTest extends TestCase
             app(OpenRouterService::class)->analyzeRepository($this->repository());
             $this->fail('Expected AnalysisException');
         } catch (AnalysisException $e) {
-            $this->assertSame(AnalysisException::RATE_LIMIT, $e->errorType);
+            $this->assertSame(AnalysisException::AI_RATE_LIMIT, $e->errorType);
         }
     }
 
@@ -143,7 +143,7 @@ class OpenRouterServiceTest extends TestCase
             app(OpenRouterService::class)->analyzeRepository($this->repository());
             $this->fail('Expected AnalysisException');
         } catch (AnalysisException $e) {
-            $this->assertSame(AnalysisException::SERVER_ERROR, $e->errorType);
+            $this->assertSame(AnalysisException::AI_SERVER_ERROR, $e->errorType);
         }
     }
 
@@ -161,11 +161,11 @@ class OpenRouterServiceTest extends TestCase
             app(OpenRouterService::class)->analyzeRepository($this->repository());
             $this->fail('Expected AnalysisException');
         } catch (AnalysisException $e) {
-            $this->assertSame(AnalysisException::INVALID_RESPONSE, $e->errorType);
+            $this->assertSame(AnalysisException::AI_INVALID_RESPONSE, $e->errorType);
         }
     }
 
-    public function test_invalid_json_throws_invalid_response(): void
+    public function test_invalid_json_throws_parse_error(): void
     {
         $this->fakeCompletion([
             'choices' => [['message' => ['content' => 'definitely not json']]],
@@ -175,31 +175,37 @@ class OpenRouterServiceTest extends TestCase
             app(OpenRouterService::class)->analyzeRepository($this->repository());
             $this->fail('Expected AnalysisException');
         } catch (AnalysisException $e) {
-            $this->assertSame(AnalysisException::INVALID_RESPONSE, $e->errorType);
+            $this->assertSame(AnalysisException::AI_PARSE_ERROR, $e->errorType);
         }
     }
 
-    public function test_unavailable_models_are_skipped_via_catalog(): void
+    public function test_unavailable_models_are_skipped_on_404(): void
     {
+        Cache::flush();
+        $this->app->forgetInstance(OpenRouterService::class);
+
+        config([
+            'openrouter.models'        => ['openai/gpt-4o-mini:free', 'google/gemma-3-27b-it:free'],
+            'openrouter.verify_models' => false,
+            'openrouter.retry_times'   => 0,
+        ]);
+
         Http::fake([
-            'openrouter.ai/api/v1/models' => Http::response([
-                'data' => [
-                    ['id' => 'openai/gpt-4o-mini:free'],
-                ],
-            ], 200),
-            'openrouter.ai/api/v1/chat/completions' => Http::response([
-                'choices' => [['message' => ['content' => json_encode([
-                    'score' => 70,
-                    'strengths' => [],
-                    'weaknesses' => [],
-                    'recommendations' => [],
-                ])]]],
-            ], 200),
+            'openrouter.ai/api/v1/chat/completions' => Http::sequence()
+                ->push(['error' => ['message' => 'Model unavailable']], 404)
+                ->push([
+                    'choices' => [['message' => ['content' => json_encode([
+                        'score' => 70,
+                        'strengths' => [],
+                        'weaknesses' => [],
+                        'recommendations' => [],
+                    ])]]],
+                ], 200),
         ]);
 
         $result = app(OpenRouterService::class)->analyzeRepository($this->repository());
 
         $this->assertSame(70, $result['score']);
-        $this->assertSame('openai/gpt-4o-mini:free', $result['_model_used']);
+        $this->assertSame('google/gemma-3-27b-it:free', $result['_model_used']);
     }
 }

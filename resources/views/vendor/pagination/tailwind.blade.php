@@ -68,7 +68,7 @@
                             @foreach ($element as $page => $url)
                                 @if ($page == $paginator->currentPage())
                                     <span aria-current="page">
-                                        <span class="px-3 py-2 rounded-lg bg-violet-600 border border-violet-500 text-white font-semibold text-sm">{{ $page }}</span>
+                                        <span class="px-3 py-2 rounded-lg bg-orange-600 border border-orange-500 text-white font-semibold text-sm">{{ $page }}</span>
                                     </span>
                                 @else
                                     <a href="{{ $url }}" class="px-3 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.15] text-white text-sm transition" aria-label="{{ __('Go to page :page', ['page' => $page]) }}">

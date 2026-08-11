@@ -3,23 +3,24 @@
     'value',
     'icon'  => null,
     'trend' => null,
-    'color' => 'violet',
+    'color' => 'orange',
     'sub'   => null,
 ])
 
 @php
 $colorMap = [
+    'orange' => ['bg' => 'bg-orange-500/10', 'border' => 'border-orange-500/20', 'text' => 'text-orange-600 dark:text-orange-400', 'glow' => 'shadow-orange-500/10'],
     'violet' => ['bg' => 'bg-violet-500/10', 'border' => 'border-violet-500/20', 'text' => 'text-violet-600 dark:text-violet-400', 'glow' => 'shadow-violet-500/10'],
-    'blue'   => ['bg' => 'bg-blue-500/10',   'border' => 'border-blue-500/20',   'text' => 'text-blue-600 dark:text-blue-400',   'glow' => 'shadow-blue-500/10'],
+    'blue'   => ['bg' => 'bg-violet-500/10',   'border' => 'border-violet-500/20',   'text' => 'text-violet-600 dark:text-violet-400',   'glow' => 'shadow-violet-500/10'],
     'emerald'=> ['bg' => 'bg-emerald-500/10', 'border' => 'border-emerald-500/20','text' => 'text-emerald-600 dark:text-emerald-400','glow' => 'shadow-emerald-500/10'],
     'amber'  => ['bg' => 'bg-amber-500/10',   'border' => 'border-amber-500/20',  'text' => 'text-amber-600 dark:text-amber-400',  'glow' => 'shadow-amber-500/10'],
     'red'    => ['bg' => 'bg-red-500/10',     'border' => 'border-red-500/20',    'text' => 'text-red-600 dark:text-red-400',    'glow' => 'shadow-red-500/10'],
 ];
-$c = $colorMap[$color] ?? $colorMap['violet'];
+$c = $colorMap[$color] ?? $colorMap['orange'];
 @endphp
 
 <div class="relative min-w-0 p-5 sm:p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[var(--border-strong)] transition-all duration-300 shadow-[var(--shadow-card)] overflow-hidden group">
-    {{-- Gradient accent --}}
+    {{-- Accent corner --}}
     <div class="absolute top-0 right-0 w-24 h-24 {{ $c['bg'] }} rounded-bl-full opacity-60 group-hover:opacity-90 transition-opacity duration-300"></div>
 
     <div class="relative">

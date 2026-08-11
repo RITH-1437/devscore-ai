@@ -19,61 +19,36 @@ return [
     | connect_timeout caps the TCP/TLS handshake. timeout caps the full
     | request. total_budget caps the total wall-clock time spent across all
     | model fallbacks and retries, so a request can never hang indefinitely.
-    |
-    | Increased defaults to handle slower free-tier models that may take
-    | 60+ seconds to respond.
     */
 
     'connect_timeout' => (int) env('OPENROUTER_CONNECT_TIMEOUT', 10),
 
-    'timeout' => (int) env('OPENROUTER_TIMEOUT', 60),
+    'timeout' => (int) env('OPENROUTER_TIMEOUT', 45),
 
-    'total_budget' => (int) env('OPENROUTER_TOTAL_BUDGET', 120),
+    'total_budget' => (int) env('OPENROUTER_TOTAL_BUDGET', 240),
 
-    'retry_times' => (int) env('OPENROUTER_RETRY_TIMES', 2),
+    'retry_times' => (int) env('OPENROUTER_RETRY_TIMES', 0),
 
-    // Verify the configured models against OpenRouter's model catalog before
-    // requesting them (results are cached for one hour).
-    //
-    // WARNING: Setting this to true may filter out working models if OpenRouter's
-    // catalog is stale or incomplete. Disabled by default for reliability.
-    'verify_models' => (bool) env('OPENROUTER_VERIFY_MODELS', false),
+    'verify_models' => (bool) env('OPENROUTER_VERIFY_MODELS', true),
 
     /*
     |--------------------------------------------------------------------------
     | Model Fallback Chain
     |
-    | Models are tried in order. If one fails (rate limit, empty response, bad
-    | JSON), the next model in the chain is attempted automatically.
-    | All models listed here are free-tier on OpenRouter.
-    |
-    | NOTE: openai/gpt-oss-20b:free is NOT a valid model — do not use it.
+    | Try specific :free slugs first — they fail fast on 404/rate-limit.
+    | openrouter/free is last: it auto-routes but often hits the full HTTP
+    | timeout before falling through, so it must not be first in the chain.
     |--------------------------------------------------------------------------
     */
 
     'models' => [
-        'openai/gpt-4o-mini:free',
+        'google/gemini-2.0-flash-exp:free',
+        'inclusionai/ling-3.0-flash:free',
+        'nvidia/nemotron-nano-9b-v2:free',
+        'openai/gpt-oss-20b:free',
         'nvidia/nemotron-nano-12b-v2-vl:free',
-        'google/gemma-3-27b-it:free',
-        'qwen/qwen3-32b:free',
-        'meta-llama/llama-3.3-8b-instruct:free',
+        'openrouter/free',
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default / Primary Model
-    |--------------------------------------------------------------------------
-    |
-    | Set via OPENROUTER_MODEL env variable. This model will be tried FIRST
-    | before falling back to the models array below. If not set, the first
-    | model in the 'models' array is used.
-    |
-    | Examples:
-    |   OPENROUTER_MODEL=openai/gpt-4o-mini:free
-    |   OPENROUTER_MODEL=anthropic/claude-3.5-sonnet:beta
-    |
-    | Leave empty to use only the models array.
-    */
 
     'default_model' => env('OPENROUTER_MODEL', ''),
 
@@ -85,6 +60,18 @@ return [
 
     'temperature' => (float) env('OPENROUTER_TEMPERATURE', 0.2),
 
-    'max_tokens' => (int) env('OPENROUTER_MAX_TOKENS', 4096),
+    'max_tokens' => (int) env('OPENROUTER_MAX_TOKENS', 2048),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Prompt payload limits
+    |--------------------------------------------------------------------------
+    */
+
+    'payload' => [
+        'max_readme_chars'      => (int) env('OPENROUTER_MAX_README_CHARS', 3000),
+        'max_description_chars' => (int) env('OPENROUTER_MAX_DESCRIPTION_CHARS', 500),
+        'max_prompt_chars'      => (int) env('OPENROUTER_MAX_PROMPT_CHARS', 10000),
+    ],
 
 ];

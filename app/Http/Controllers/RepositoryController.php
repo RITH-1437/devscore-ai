@@ -96,32 +96,55 @@ class RepositoryController extends Controller
     }
 
     /**
-     * Run AI analysis for a repository.
-     *
-     * The pipeline runs synchronously (with bounded timeouts internally) so
-     * analysis always completes even when no queue worker is running, while
-     * still respecting the shared RepositoryAnalysisService code path.
+     * Run AI analysis for a repository (dispatched to background queue).
      */
     public function analyze(Request $request, Repository $repository): RedirectResponse
     {
-        // Authorize via policy
         $this->authorize('analyze', $repository);
 
-        // Prevent duplicate analysis requests while one is already running.
-        // Stale "processing" rows (e.g. from a dead queue worker) can be retried.
         if ($repository->isAnalyzing() && ! $repository->isStaleProcessing()) {
             return back()->with('info', 'Analysis is already in progress.');
         }
 
-        AnalyzeRepositoryJob::dispatchSync($repository, $request->user());
+        $repository->update([
+            'analysis_status'     => 'processing',
+            'analysis_started_at' => now(),
+        ]);
+
+        AnalyzeRepositoryJob::dispatch($repository, $request->user());
+
+        return redirect()->route('repositories.show', $repository)
+            ->with('info', 'AI analysis started. Results will appear shortly.');
+    }
+
+    /**
+     * Poll the current analysis status for a repository (JSON).
+     */
+    public function analysisStatus(Request $request, Repository $repository): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('view', $repository);
 
         $repository->refresh();
 
-        return $repository->isAnalyzed()
-            ? redirect()->route('repositories.show', $repository)
-                ->with('success', 'AI analysis completed!')
-            : redirect()->route('repositories.show', $repository)
-                ->with('error', 'AI analysis failed — please retry.');
+        $failureMessage = null;
+        if ($repository->hasFailed()) {
+            $failureMessage = \App\Models\Analysis::query()
+                ->where('user_id', $request->user()->id)
+                ->where('repository_id', $repository->id)
+                ->where('status', 'failed')
+                ->latest('updated_at')
+                ->value('error_message');
+        }
+
+        return response()->json([
+            'status'          => $repository->analysis_status ?? 'pending',
+            'is_analyzed'     => $repository->isAnalyzed(),
+            'is_analyzing'    => $repository->isAnalyzing(),
+            'has_failed'      => $repository->hasFailed(),
+            'score'           => $repository->score,
+            'failure_message' => $failureMessage,
+            'analyzed_at'     => $repository->ai_analyzed_at?->toIso8601String(),
+        ]);
     }
 
     public function togglePin(Request $request, Repository $repository): RedirectResponse

@@ -11,7 +11,7 @@ It is useful for developer communities, students, bootcamp members, and job seek
 - Dashboard with repository count, stars, top languages, pinned repositories, and portfolio score
 - Repository list with search, language filter, sorting, and pagination
 - Individual repository detail pages
-- AI analysis for each repository through OpenRouter
+- AI analysis for each repository through Google Gemini (direct) or OpenRouter (fallback)
 - AI score, difficulty, portfolio level, recruiter rating, hiring probability, and market readiness
 - Technical review sections for architecture, security, performance, and code style
 - Career suggestions for resume, CV, LinkedIn, target companies, and interviews
@@ -25,12 +25,13 @@ It is useful for developer communities, students, bootcamp members, and job seek
 - Laravel 13
 - Laravel Socialite for GitHub OAuth
 - MySQL by default
-- Database queue driver
+- File cache and database queue by default (Redis optional for performance)
 - Blade templates
 - Tailwind CSS 4
 - Alpine.js
 - Vite
-- OpenRouter API for AI model access
+- OpenRouter API for AI model access (fallback when Gemini is not configured)
+- Google Gemini API for direct AI analysis (preferred when configured)
 
 ## How The App Works
 
@@ -51,7 +52,8 @@ Before running the project, install:
 - Node.js and npm
 - MySQL or MariaDB
 - A GitHub OAuth app
-- An OpenRouter API key
+- A Google Gemini API key (recommended) or an OpenRouter API key
+- Redis (optional, recommended for production performance)
 
 ## Setup
 
@@ -107,12 +109,117 @@ DB_PASSWORD=
 
 SESSION_DRIVER=database
 QUEUE_CONNECTION=database
+DB_QUEUE_RETRY_AFTER=330
+CACHE_STORE=file
 ```
+
+`DB_QUEUE_RETRY_AFTER` must be greater than the AI job timeout (300 seconds). If it is too low, Laravel may re-release a still-running analysis job and duplicate work.
 
 Run the database migrations:
 
 ```bash
 php artisan migrate
+```
+
+## Redis Setup (Optional)
+
+Redis is **not required** to run GitRadar. The app works out of the box with file cache, database sessions, and a database queue. Enable Redis when you want faster cache reads, lower-latency job dispatch, or session storage that scales across multiple app servers.
+
+### Install Redis
+
+**Docker (easiest, all platforms):**
+
+```bash
+docker run -d --name gitradar-redis -p 6379:6379 redis:7-alpine
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+sudo apt update && sudo apt install redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+```
+
+**Windows:**
+
+- [Memurai](https://www.memurai.com/) (Redis-compatible, native Windows), or
+- WSL2 with `sudo apt install redis-server`, or
+- Docker Desktop with the command above
+
+### Redis client
+
+GitRadar ships with [predis/predis](https://github.com/predis/predis) (pure PHP, works on Windows without extra extensions). For better throughput on Linux/macOS, install the [phpredis](https://github.com/phpredis/phpredis) extension and set `REDIS_CLIENT=phpredis`.
+
+Verify connectivity:
+
+```bash
+php artisan tinker --execute="Illuminate\Support\Facades\Redis::ping();"
+```
+
+### Enable Redis drivers
+
+Add or update these values in `.env` after Redis is running:
+
+```env
+REDIS_CLIENT=predis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+
+# Recommended production settings:
+CACHE_STORE=redis
+QUEUE_CONNECTION=redis
+
+# Optional — faster session I/O when running multiple app instances:
+# SESSION_DRIVER=redis
+```
+
+### Graceful fallback (Redis optional)
+
+If Redis may be unavailable (local dev, shared hosting), use Laravel's failover drivers instead of hard-coding `redis`:
+
+```env
+CACHE_STORE=failover
+QUEUE_CONNECTION=failover
+```
+
+Failover order:
+
+- **Cache:** redis → database → file
+- **Queue:** redis → database
+
+The app keeps working when Redis is down; it automatically uses the next driver in the chain.
+
+To stay on database-only queues (no Redis at all), keep the defaults:
+
+```env
+QUEUE_CONNECTION=database
+CACHE_STORE=file
+SESSION_DRIVER=database
+```
+
+### What uses Redis when enabled
+
+| Driver | Used for |
+|--------|----------|
+| **Cache** | Portfolio score (`portfolio_score_{user_id}`, 10 min TTL), OpenRouter model list (1 hr TTL) |
+| **Queue** | Repository sync jobs, AI analysis jobs (`AnalyzeRepositoryJob`) |
+| **Session** | OAuth login session data (optional) |
+
+Repository and profile data are stored in MySQL; GitHub API responses are persisted during sync and are not cached separately.
+
+### Run queue worker with Redis
+
+When `QUEUE_CONNECTION=redis`, start the worker the same way:
+
+```bash
+php artisan queue:listen --tries=1 --timeout=0
+```
+
+Or in production:
+
+```bash
+php artisan queue:work redis --tries=3
 ```
 
 ## GitHub OAuth Setup
@@ -144,7 +251,37 @@ The app requests these GitHub scopes:
 - `user`
 - `public_repo`
 
-## OpenRouter Setup
+## Google Gemini Setup (Recommended)
+
+Create a Google AI Studio API key from:
+
+```text
+https://aistudio.google.com/apikey
+```
+
+Add it to `.env`:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+When `GEMINI_API_KEY` is set, repository analysis uses direct Gemini (`gemini-2.5-flash` by default). OpenRouter is not used unless you remove the Gemini key.
+
+Optional Gemini settings:
+
+```env
+GEMINI_MODEL=gemini-2.5-flash
+GEMINI_TIMEOUT=45
+GEMINI_RETRY_TIMES=0
+GEMINI_TEMPERATURE=0.2
+GEMINI_MAX_TOKENS=2048
+```
+
+**Security:** Never commit your `.env` file or share API keys in chat. If a key is exposed, rotate it immediately in Google AI Studio.
+
+## OpenRouter Setup (Fallback)
+
+If you prefer not to use direct Gemini, leave `GEMINI_API_KEY` empty and configure OpenRouter instead.
 
 Create an OpenRouter API key from:
 
@@ -293,7 +430,8 @@ app/Http/Controllers        Page and action controllers
 app/Jobs                    Background jobs for syncing and AI analysis
 app/Models                  User, GitHub account, repository, and analysis models
 app/Policies                Repository ownership policy
-app/Services                GitHub, OpenRouter, sync, score, and analysis services
+app/Services                GitHub, Gemini, OpenRouter, sync, score, and analysis services
+config/gemini.php           Google Gemini model and request settings
 config/openrouter.php       OpenRouter model and request settings
 database/migrations         Database schema
 resources/views             Blade UI pages and components
@@ -330,16 +468,26 @@ If repositories do not appear, check:
 
 If AI analysis does not finish, check:
 
-- `OPENROUTER_API_KEY` is set correctly
+- `GEMINI_API_KEY` or `OPENROUTER_API_KEY` is set correctly
 - The queue worker is running
-- Your OpenRouter account can access the configured models
-- `storage/logs/laravel.log` for OpenRouter errors
+- Your API provider account has quota available
+- `storage/logs/laravel.log` for AI provider errors
 
 If environment changes are not picked up, run:
 
 ```bash
 php artisan config:clear
 ```
+
+If Redis is enabled but the app cannot connect, either start Redis or switch back to fallback drivers:
+
+```env
+CACHE_STORE=file
+QUEUE_CONNECTION=database
+SESSION_DRIVER=database
+```
+
+Or use `CACHE_STORE=failover` and `QUEUE_CONNECTION=failover` to auto-fallback when Redis is down.
 
 ## Notes For Community Members
 
