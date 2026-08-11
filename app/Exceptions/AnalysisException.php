@@ -19,6 +19,8 @@ class AnalysisException extends RuntimeException
     public const AI_RATE_LIMIT           = 'AI_RATE_LIMIT';
     public const AI_MODEL_UNAVAILABLE    = 'AI_MODEL_UNAVAILABLE';
     public const AI_AUTH_ERROR           = 'AI_AUTH_ERROR';
+    public const AI_PERMISSION_ERROR     = 'AI_PERMISSION_ERROR';
+    public const AI_INVALID_REQUEST      = 'AI_INVALID_REQUEST';
     public const AI_INSUFFICIENT_CREDITS = 'AI_INSUFFICIENT_CREDITS';
     public const AI_SERVER_ERROR         = 'AI_SERVER_ERROR';
     public const AI_TIMEOUT              = 'AI_TIMEOUT';
@@ -81,6 +83,8 @@ class AnalysisException extends RuntimeException
             self::MODEL_UNAVAILABLE    => 'The selected AI model is currently unavailable. Please try again.',
             self::AI_AUTH_ERROR,
             self::AUTH_ERROR           => 'AI authentication failed. Please check your API key configuration.',
+            self::AI_PERMISSION_ERROR  => 'AI access denied for this API key or project. Check Gemini permissions and billing.',
+            self::AI_INVALID_REQUEST   => 'The AI request was rejected as invalid. Please try again or contact support.',
             self::AI_INSUFFICIENT_CREDITS,
             self::INSUFFICIENT_CREDITS => 'AI credits are exhausted. Please top up your provider balance.',
             self::AI_SERVER_ERROR,

@@ -51,31 +51,8 @@ trait ParsesAndValidatesAnalysisResponses
             'content_start'  => substr($content, 0, 100),
         ]);
 
-        $cleaned = preg_replace('/^```(?:json)?\s*/m', '', $content) ?? $content;
-        $cleaned = preg_replace('/^```\s*$/m', '', $cleaned) ?? $cleaned;
-        $cleaned = trim($cleaned);
-
-        $decoded = json_decode($cleaned, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            return $decoded;
-        }
-
-        if (preg_match('/(\{[\s\S]*\})/s', $content, $matches)) {
-            $decoded = json_decode($matches[1], true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                return $decoded;
-            }
-        }
-
-        $fixed = preg_replace('/,\s*([\]}])/s', '$1', $content) ?? $content;
-        $decoded = json_decode($fixed, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            return $decoded;
-        }
-
-        if (substr_count($content, '{') > substr_count($content, '}')) {
-            $fixed = $content . str_repeat('}', substr_count($content, '{') - substr_count($content, '}'));
-            $decoded = json_decode($fixed, true);
+        foreach ($this->jsonCandidates($content) as $candidate) {
+            $decoded = json_decode($candidate, true, 512, JSON_INVALID_UTF8_SUBSTITUTE);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 return $decoded;
             }
@@ -88,6 +65,56 @@ trait ParsesAndValidatesAnalysisResponses
         ]);
 
         return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function jsonCandidates(string $content): array
+    {
+        $candidates = [];
+
+        $cleaned = preg_replace('/^```(?:json)?\s*/m', '', $content) ?? $content;
+        $cleaned = preg_replace('/^```\s*$/m', '', $cleaned) ?? $cleaned;
+        $cleaned = trim($cleaned);
+        $candidates[] = $cleaned;
+
+        if (preg_match('/(\{[\s\S]*\})/s', $content, $matches)) {
+            $candidates[] = $matches[1];
+        }
+
+        $repaired = $this->repairTruncatedJson($cleaned);
+        if ($repaired !== $cleaned) {
+            $candidates[] = $repaired;
+        }
+
+        $noTrailingCommas = preg_replace('/,\s*([\]}])/s', '$1', $cleaned) ?? $cleaned;
+        $candidates[] = $noTrailingCommas;
+
+        return array_values(array_unique(array_filter($candidates)));
+    }
+
+    private function repairTruncatedJson(string $content): string
+    {
+        $content = trim($content);
+        if ($content === '') {
+            return $content;
+        }
+
+        // Drop an incomplete trailing property or array item.
+        $content = (string) preg_replace('/,\s*"[^"]*":\s*"[^"]*$/s', '', $content);
+        $content = (string) preg_replace('/,\s*"[^"]*":\s*[\d\[\{][^\}\]]*$/s', '', $content);
+        $content = (string) preg_replace('/,\s*"[^"]*":\s*$/s', '', $content);
+        $content = (string) preg_replace('/,\s*"[^"]*$/s', '', $content);
+        $content = (string) preg_replace('/,\s*$/', '', $content);
+
+        $openBrackets = max(0, substr_count($content, '[') - substr_count($content, ']'));
+        $openBraces   = max(0, substr_count($content, '{') - substr_count($content, '}'));
+
+        $content .= str_repeat(']', $openBrackets);
+        $content .= str_repeat('}', $openBraces);
+
+        return $content;
     }
 
     /**

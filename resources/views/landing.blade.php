@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="GitRadar — AI Portfolio Analyzer. Get GitHub portfolio scores in 3-5 minutes, recruiter insights, and career recommendations.">
+    <meta name="description" content="GitRadar — AI Portfolio Analyzer. Get GitHub portfolio scores in less than 1 minute, recruiter insights, and career recommendations.">
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <title>GitRadar — AI Portfolio Analyzer</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -67,7 +67,7 @@
         </h1>
 
         <p class="text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Connect your GitHub account and get AI-powered scores in 3-5 minutes, recruiter insights,
+            Connect your GitHub account and get AI-powered scores in less than 1 minute, recruiter insights,
             career recommendations, and improvement roadmaps across your entire portfolio.
         </p>
 
@@ -79,7 +79,7 @@
                 </svg>
                 Analyze My Portfolio — Free
             </a>
-            <span class="text-slate-500 text-sm">No credit card · Results in 3-5 minutes</span>
+            <span class="text-slate-500 text-sm">No credit card · Results in less than 1 minute</span>
         </div>
     </section>
 
@@ -128,7 +128,7 @@
     <section class="relative z-10 py-12 px-6 max-w-7xl mx-auto">
         <div class="rounded-2xl bg-white/[0.03] border border-white/[0.07] p-10">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-10 text-center">
-                @foreach([['5+', 'AI Models'], ['20+', 'Metrics Tracked'], ['Free', 'Always'], ['3-5', 'Minutes']] as [$val, $label])
+                @foreach([['5+', 'AI Models'], ['20+', 'Metrics Tracked'], ['Free', 'Always'], ['<1', 'Minute']] as [$val, $label])
                 <div>
                     <div class="text-4xl font-black text-orange-400 mb-1">{{ $val }}</div>
                     <div class="text-slate-500 text-sm">{{ $label }}</div>

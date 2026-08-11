@@ -372,7 +372,14 @@ php artisan view:cache
 For production, run a real queue worker instead of `queue:listen`, for example:
 
 ```bash
-php artisan queue:work --tries=3
+php artisan queue:work --tries=1 --timeout=330
+```
+
+**Important:** After changing `.env`, AI models, or Gemini/OpenRouter config, stop and restart the queue worker. Long-running workers cache old configuration and will keep using deprecated model names until restarted.
+
+```bash
+php artisan optimize:clear
+# Then restart queue:work in a fresh terminal
 ```
 
 ## Testing

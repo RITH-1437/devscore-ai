@@ -188,6 +188,8 @@ class GoogleGeminiService
                     AnalysisException::AI_RATE_LIMIT,
                     AnalysisException::AI_MODEL_UNAVAILABLE,
                     AnalysisException::AI_AUTH_ERROR,
+                    AnalysisException::AI_PERMISSION_ERROR,
+                    AnalysisException::AI_INVALID_REQUEST,
                     AnalysisException::AI_TIMEOUT,
                     AnalysisException::AI_CONFIGURATION_ERROR,
                     AnalysisException::AI_NETWORK_ERROR,
@@ -237,9 +239,10 @@ class GoogleGeminiService
                         ],
                     ],
                     'generationConfig' => [
-                        'temperature'     => $this->temperature,
-                        'maxOutputTokens' => $this->maxTokens,
-                        'responseMimeType'  => 'application/json',
+                        'temperature'      => $this->temperature,
+                        'maxOutputTokens'  => $this->maxTokens,
+                        'responseMimeType' => 'application/json',
+                        'responseSchema'   => config('gemini.response_schema'),
                     ],
                 ]);
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
@@ -287,10 +290,18 @@ class GoogleGeminiService
             );
         }
 
-        if (in_array($status, [401, 403], true)) {
+        if ($status === 401) {
             throw new AnalysisException(
                 'Invalid Gemini API key',
                 AnalysisException::AI_AUTH_ERROR,
+                $status
+            );
+        }
+
+        if ($status === 403) {
+            throw new AnalysisException(
+                'Gemini API permission denied',
+                AnalysisException::AI_PERMISSION_ERROR,
                 $status
             );
         }
@@ -307,6 +318,14 @@ class GoogleGeminiService
             throw new AnalysisException(
                 "HTTP {$status} from Gemini for model {$model}",
                 AnalysisException::AI_SERVER_ERROR,
+                $status
+            );
+        }
+
+        if ($status === 400) {
+            throw new AnalysisException(
+                "Invalid request to Gemini model {$model}",
+                AnalysisException::AI_INVALID_REQUEST,
                 $status
             );
         }
@@ -329,7 +348,9 @@ class GoogleGeminiService
             );
         }
 
-        $parts = $responseData['candidates'][0]['content']['parts'] ?? [];
+        $candidate = $responseData['candidates'][0];
+        $finishReason = (string) ($candidate['finishReason'] ?? 'UNKNOWN');
+        $parts = $candidate['content']['parts'] ?? [];
         $content = '';
 
         foreach ($parts as $part) {
@@ -352,7 +373,18 @@ class GoogleGeminiService
             'request_id'     => $requestId,
             'model'          => $model,
             'content_length' => strlen($content),
+            'finish_reason'  => $finishReason,
+            'output_tokens'  => $usage['candidatesTokenCount'] ?? null,
         ]);
+
+        if ($finishReason === 'MAX_TOKENS') {
+            Log::warning("{$timingLabel} [AI] gemini response hit MAX_TOKENS +{$this->timingMs($timingStart)}ms", [
+                'request_id'    => $requestId,
+                'model'         => $model,
+                'content_length'=> strlen($content),
+                'output_tokens' => $usage['candidatesTokenCount'] ?? null,
+            ]);
+        }
 
         return [$content, [
             'prompt_tokens'     => (int) ($usage['promptTokenCount'] ?? 0),
@@ -364,6 +396,74 @@ class GoogleGeminiService
     private function generateRequestId(): string
     {
         return 'gem_' . Str::random(16);
+    }
+
+    /**
+     * Verify Gemini connectivity without repository payload.
+     *
+     * @return array<string, mixed>
+     */
+    public function healthCheck(): array
+    {
+        $primaryModel = $this->models[0] ?? '';
+
+        if ($this->apiKey === '') {
+            return [
+                'provider'   => 'gemini',
+                'configured' => false,
+                'model'      => $primaryModel,
+                'available'  => false,
+                'status'     => 'misconfigured',
+            ];
+        }
+
+        if ($primaryModel === '') {
+            return [
+                'provider'   => 'gemini',
+                'configured' => true,
+                'model'      => null,
+                'available'  => false,
+                'status'     => 'misconfigured',
+            ];
+        }
+
+        $start = microtime(true);
+        $url = "{$this->baseUrl}/models/{$primaryModel}:generateContent?key=" . urlencode($this->apiKey);
+
+        try {
+            $response = Http::connectTimeout($this->connectTimeout)
+                ->timeout(min($this->timeout, 30))
+                ->post($url, [
+                    'contents' => [
+                        ['parts' => [['text' => 'Return only this JSON: {"status":"ok"}']]],
+                    ],
+                    'generationConfig' => [
+                        'maxOutputTokens' => 32,
+                        'responseMimeType'  => 'application/json',
+                    ],
+                ]);
+        } catch (\Throwable) {
+            return [
+                'provider'    => 'gemini',
+                'configured'  => true,
+                'model'       => $primaryModel,
+                'available'   => false,
+                'status'      => 'unreachable',
+                'elapsed_ms'  => (int) round((microtime(true) - $start) * 1000),
+            ];
+        }
+
+        $elapsed = (int) round((microtime(true) - $start) * 1000);
+
+        return [
+            'provider'    => 'gemini',
+            'configured'  => true,
+            'model'       => $primaryModel,
+            'available'   => $response->successful(),
+            'status'      => $response->successful() ? 'healthy' : 'degraded',
+            'http_status' => $response->status(),
+            'elapsed_ms'  => $elapsed,
+        ];
     }
 
     private function timingMs(float $start): string

@@ -100,7 +100,7 @@ class GoogleGeminiServiceTest extends TestCase
         }
     }
 
-    public function test_403_throws_auth_error(): void
+    public function test_403_throws_permission_error(): void
     {
         Http::fake([
             'generativelanguage.googleapis.com/*' => Http::response([], 403),
@@ -110,7 +110,7 @@ class GoogleGeminiServiceTest extends TestCase
             app(GoogleGeminiService::class)->analyzeRepository($this->repository());
             $this->fail('Expected AnalysisException');
         } catch (AnalysisException $e) {
-            $this->assertSame(AnalysisException::AI_AUTH_ERROR, $e->errorType);
+            $this->assertSame(AnalysisException::AI_PERMISSION_ERROR, $e->errorType);
         }
     }
 

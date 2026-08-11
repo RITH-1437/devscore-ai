@@ -40,6 +40,13 @@ class AnalyzeRepositoryJob implements ShouldQueue
 
     public function handle(RepositoryAnalysisService $analysisService): void
     {
+        Log::info('AnalyzeRepositoryJob: starting', [
+            'repository_id'   => $this->repository->id,
+            'repository'      => $this->repository->name,
+            'ai_provider'     => app(\App\Services\AiAnalysisService::class)->providerName(),
+            'gemini_models'   => config('gemini.models'),
+        ]);
+
         $analysisService->analyze($this->repository, $this->user);
     }
 

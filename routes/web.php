@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AiHealthController;
 use App\Http\Controllers\AnalysisController;
 use App\Http\Controllers\Auth\GitHubController;
 use App\Http\Controllers\DashboardController;
@@ -104,6 +105,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/settings/sync', [SettingsController::class, 'syncRepositories'])
         ->name('settings.sync')
         ->middleware('throttle:5,10'); // 5 syncs per 10 minutes
+
+    // ── AI Health (authenticated) ──────────────────────────────────────────
+    Route::get('/health/ai', AiHealthController::class)
+        ->name('health.ai');
 
     // ── Logout (POST only — CSRF protected) ────────────────────────────────
     Route::post('/logout', [SettingsController::class, 'logout'])

@@ -25,7 +25,7 @@ trait BuildsAnalysisPrompts
 You are a senior software engineer, technical recruiter, and portfolio analyst reviewing a GitHub repository.
 
 Analyze this repository and return ONLY valid JSON. No markdown code blocks, no explanations — just raw JSON.
-Keep each array field to 3-5 concise bullet points maximum.
+Keep each array field to 2-3 short bullet points (max 15 words each). Keep the entire JSON under 4000 characters.
 
 Repository Details:
 - Name: {$repository->name}
