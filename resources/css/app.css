@@ -1,9 +1,253 @@
 @import 'tailwindcss';
 
+@source '../../resources/views/**/*.blade.php';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+
+/* Class-based dark mode: <html class="dark"> enables the `dark:` variant.
+   Light mode (no class) is the default theme. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/*
+ * Design tokens
+ * ─────────────
+ * Light mode is the default palette. Dark mode overrides the same tokens
+ * under the `.dark` class, so components only ever need to reference the
+ * token — never a hardcoded light/dark color pair.
+ */
+:root {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-muted: #f1f5f9;
+    --bg-hover: #e2e8f0;
+
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+
+    --border-color: #e2e8f0;
+    --border-strong: #cbd5e1;
+
+    --primary: #7c3aed;
+    --primary-hover: #6d28d9;
+    --primary-soft: rgba(124, 58, 237, 0.08);
+    --primary-soft-border: rgba(124, 58, 237, 0.2);
+
+    --secondary: #2563eb;
+    --secondary-soft: rgba(37, 99, 235, 0.08);
+    --secondary-soft-border: rgba(37, 99, 235, 0.2);
+
+    --success: #10b981;
+    --success-soft: rgba(16, 185, 129, 0.08);
+    --success-soft-border: rgba(16, 185, 129, 0.2);
+
+    --warning: #f59e0b;
+    --warning-soft: rgba(245, 158, 11, 0.08);
+    --warning-soft-border: rgba(245, 158, 11, 0.2);
+
+    --danger: #ef4444;
+    --danger-soft: rgba(239, 68, 68, 0.08);
+    --danger-soft-border: rgba(239, 68, 68, 0.2);
+
+    --info: #2563eb;
+    --info-soft: rgba(37, 99, 235, 0.08);
+    --info-soft-border: rgba(37, 99, 235, 0.2);
+
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --glow-primary: rgba(124, 58, 237, 0.15);
+    --glow-secondary: rgba(37, 99, 235, 0.1);
+
+    /* Language colors - centralized system */
+    --lang-php: #777bb4;
+    --lang-javascript: #f7df1e;
+    --lang-typescript: #3178c6;
+    --lang-python: #3776ab;
+    --lang-java: #ed8b00;
+    --lang-csharp: #68217a;
+    --lang-cpp: #00599c;
+    --lang-c: #a8b9cc;
+    --lang-go: #00add8;
+    --lang-rust: #000000;
+    --lang-swift: #fa7343;
+    --lang-kotlin: #7f52ff;
+    --lang-ruby: #cc342d;
+    --lang-html: #e34f26;
+    --lang-css: #1572b6;
+    --lang-scss: #cf649a;
+    --lang-vue: #4fc08d;
+    --lang-react: #61dafb;
+    --lang-angular: #dd1b16;
+    --lang-dart: #0175c2;
+    --lang-flutter: #02569b;
+    --lang-shell: #89e051;
+    --lang-dockerfile: #384d54;
+    --lang-yaml: #cb171e;
+    --lang-json: #000000;
+    --lang-xml: #0060ac;
+    --lang-markdown: #083fa1;
+    --lang-default: #6b7280;
+}
+
+.dark {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #1e293b;
+    --bg-muted: #334155;
+    --bg-hover: #475569;
+
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+
+    --border-color: rgba(203, 213, 225, 0.1);
+    --border-strong: rgba(203, 213, 225, 0.2);
+
+    --primary: #8b5cf6;
+    --primary-hover: #7c3aed;
+    --primary-soft: rgba(139, 92, 246, 0.1);
+    --primary-soft-border: rgba(139, 92, 246, 0.2);
+
+    --secondary: #3b82f6;
+    --secondary-soft: rgba(59, 130, 246, 0.1);
+    --secondary-soft-border: rgba(59, 130, 246, 0.2);
+
+    --success: #22c55e;
+    --success-soft: rgba(34, 197, 94, 0.1);
+    --success-soft-border: rgba(34, 197, 94, 0.2);
+
+    --warning: #f59e0b;
+    --warning-soft: rgba(245, 158, 11, 0.1);
+    --warning-soft-border: rgba(245, 158, 11, 0.2);
+
+    --danger: #ef4444;
+    --danger-soft: rgba(239, 68, 68, 0.1);
+    --danger-soft-border: rgba(239, 68, 68, 0.2);
+
+    --info: #3b82f6;
+    --info-soft: rgba(59, 130, 246, 0.1);
+    --info-soft-border: rgba(59, 130, 246, 0.2);
+
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+    --glow-primary: rgba(139, 92, 246, 0.2);
+    --glow-secondary: rgba(59, 130, 246, 0.15);
+
+    /* Language colors for dark mode - slightly brighter variants */
+    --lang-php: #9d8df1;
+    --lang-javascript: #f7df1e;
+    --lang-typescript: #4c9aff;
+    --lang-python: #4b9bff;
+    --lang-java: #f4ac3a;
+    --lang-csharp: #9b4f96;
+    --lang-cpp: #659ad2;
+    --lang-c: #a8b9cc;
+    --lang-go: #00add8;
+    --lang-rust: #dea584;
+    --lang-swift: #fa7343;
+    --lang-kotlin: #a97bff;
+    --lang-ruby: #ff6b6b;
+    --lang-html: #e34c26;
+    --lang-css: #264de4;
+    --lang-scss: #cf649a;
+    --lang-vue: #4fc08d;
+    --lang-react: #61dafb;
+    --lang-angular: #dd1b16;
+    --lang-dart: #0175c2;
+    --lang-flutter: #02569b;
+    --lang-shell: #89e051;
+    --lang-dockerfile: #384d54;
+    --lang-yaml: #cb171e;
+    --lang-json: #94a3b8;
+    --lang-xml: #0060ac;
+    --lang-markdown: #4a9eff;
+    --lang-default: #94a3b8;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+    touch-action: manipulation;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+}
+
+button:disabled,
+[aria-disabled='true'] {
+    cursor: not-allowed;
+}
+
+.skip-link {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    z-index: 60;
+    transform: translateY(-150%);
+    border-radius: 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-lg);
+}
+
+.skip-link:focus-visible {
+    transform: translateY(0);
+}
+
+.break-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* Smooth, contained theme transition — avoids jarring flashes when toggling. */
+body,
+body * {
+    transition-property: background-color, border-color, color, box-shadow;
+    transition-duration: 150ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    body,
+    body * {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
 }

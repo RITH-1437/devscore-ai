@@ -1,0 +1,31 @@
+<svg width="300" height="80" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .text {
+      font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+      font-size: 48px;
+      font-weight: bold;
+      dominant-baseline: central;
+    }
+    .git {
+      fill: #F05033; /* A git-like orange color */
+    }
+    .radar-text {
+      fill: #333;
+    }
+    .radar-icon {
+        stroke: #333;
+        stroke-width: 2.5;
+        fill: none;
+    }
+  </style>
+
+  <g transform="translate(40, 40)">
+    <circle class="radar-icon" cx="0" cy="0" r="25" />
+    <circle class="radar-icon" cx="0" cy="0" r="15" />
+    <path class="radar-icon" d="M 0 0 L 21.65 -12.5" />
+  </g>
+
+  <text x="85" y="40" class="text">
+    <tspan class="git">Git</tspan><tspan class="radar-text">Radar</tspan>
+  </text>
+</svg>
