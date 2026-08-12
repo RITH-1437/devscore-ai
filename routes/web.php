@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InsightsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RepositoryController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,10 +21,10 @@ Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
 })->name('health');
 
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
+
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
     return view('landing');
 })->name('home');
 
