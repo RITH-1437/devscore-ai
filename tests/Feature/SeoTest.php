@@ -17,8 +17,10 @@ class SeoTest extends TestCase
         $response = $this->get('/');
 
         $response->assertOk();
-        $response->assertSee('AI GitHub Portfolio Analyzer', false);
+        $response->assertSee('AI-Powered GitHub Portfolio Analysis', false);
         $response->assertSee('<meta name="robots" content="index, follow">', false);
+        $response->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
+        $response->assertSee('application/ld+json', false);
     }
 
     public function test_robots_txt_is_served(): void
@@ -28,9 +30,22 @@ class SeoTest extends TestCase
         $response->assertOk();
         $response->assertHeader('Content-Type', 'text/plain; charset=UTF-8');
         $response->assertSee('User-agent: *');
-        $response->assertSee('Allow: /');
+        $response->assertSee('Disallow: /dashboard');
+        $response->assertSee('Disallow: /repositories');
+        $response->assertSee('Disallow: /auth/');
         $response->assertSee('Sitemap:');
         $response->assertSee('/sitemap.xml');
+    }
+
+    public function test_seo_public_url_normalizes_malformed_scheme(): void
+    {
+        config(['seo.public_url' => 'https:/gitradar.duckdns.org']);
+
+        $response = $this->get('/sitemap.xml');
+
+        $response->assertOk();
+        $response->assertSee('<loc>https://gitradar.duckdns.org/</loc>', false);
+        $response->assertDontSee('https:/gitradar.duckdns.org', false);
     }
 
     public function test_sitemap_xml_lists_only_public_urls(): void

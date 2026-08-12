@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
-        $canonicalUrl = rtrim(config('seo.public_url'), '/').'/';
+        use App\Support\Seo;
+
+        $canonicalUrl = Seo::publicUrl().'/';
         $seoDescription = 'GitRadar analyzes your GitHub portfolio with AI — get portfolio scores in under a minute, recruiter-ready insights, and actionable career recommendations for developers.';
-        $ogImage = rtrim(config('seo.public_url'), '/').'/'.ltrim(config('seo.og_image'), '/');
+        $ogImage = Seo::publicUrl().'/'.ltrim(config('seo.og_image'), '/');
         $siteName = config('app.name', 'GitRadar');
-        $pageTitle = 'GitRadar — AI GitHub Portfolio Analyzer';
+        $pageTitle = 'GitRadar — AI-Powered GitHub Portfolio Analysis';
     @endphp
     <title>{{ $pageTitle }}</title>
     <meta name="description" content="{{ $seoDescription }}">

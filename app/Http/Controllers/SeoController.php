@@ -2,28 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Seo;
 use Illuminate\Http\Response;
 
 class SeoController extends Controller
 {
     public function robots(): Response
     {
-        $sitemap = config('seo.public_url').'/sitemap.xml';
+        $sitemap = Seo::publicUrl().'/sitemap.xml';
 
-        $content = implode("\n", [
-            'User-agent: *',
-            'Allow: /',
-            '',
-            "Sitemap: {$sitemap}",
-        ])."\n";
+        $lines = ['User-agent: *'];
 
-        return response($content, 200)
+        foreach (config('seo.robots_disallow', []) as $path) {
+            $lines[] = 'Disallow: '.$path;
+        }
+
+        $lines[] = '';
+        $lines[] = "Sitemap: {$sitemap}";
+
+        return response(implode("\n", $lines)."\n", 200)
             ->header('Content-Type', 'text/plain; charset=UTF-8');
     }
 
     public function sitemap(): Response
     {
-        $base = rtrim(config('seo.public_url'), '/');
+        $base = Seo::publicUrl();
 
         $entries = collect(config('seo.sitemap_paths', []))
             ->map(function (string $path): array {

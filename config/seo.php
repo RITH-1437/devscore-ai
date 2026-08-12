@@ -13,7 +13,16 @@ return [
     |
     */
 
-    'public_url' => rtrim(env('SEO_PUBLIC_URL', env('APP_URL', 'http://localhost')), '/'),
+    'public_url' => (static function (): string {
+        $url = rtrim((string) env('SEO_PUBLIC_URL', env('APP_URL', 'http://localhost')), '/');
+
+        // Normalize malformed scheme URLs (e.g. https:/example.com → https://example.com).
+        if (preg_match('#^(https?):/([^/])#', $url)) {
+            $url = preg_replace('#^(https?):/([^/])#', '$1://$2', $url);
+        }
+
+        return $url;
+    })(),
 
     /*
     |--------------------------------------------------------------------------
@@ -27,6 +36,27 @@ return [
 
     'sitemap_paths' => [
         '/',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | robots.txt — Disallow Private Paths
+    |--------------------------------------------------------------------------
+    |
+    | Crawl hints for authenticated app areas. Not a substitute for auth.
+    |
+    */
+
+    'robots_disallow' => [
+        '/dashboard',
+        '/repositories',
+        '/analysis',
+        '/insights',
+        '/profile',
+        '/settings',
+        '/logout',
+        '/auth/',
+        '/health/ai',
     ],
 
     /*
