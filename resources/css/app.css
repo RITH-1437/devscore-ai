@@ -426,50 +426,60 @@ button:disabled,
     word-break: break-word;
 }
 
-/* Sidebar sign-out — drawer entrance + tap feedback (mobile/tablet only) */
-@media (max-width: 1023px) {
-    .sidebar-sign-out-footer {
-        transition: transform 280ms ease-out, opacity 280ms ease-out;
-    }
+/* Sidebar sign-out button */
+.sidebar-sign-out-btn {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
 
-    .sidebar-sign-out-footer.is-drawer-open {
-        transform: translateY(0);
-        opacity: 1;
-        transition-delay: 200ms;
-    }
+.sidebar-sign-out-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
 
-    .sidebar-sign-out-footer.is-drawer-closed {
-        transform: translateY(0.75rem);
-        opacity: 0;
-        transition-delay: 0ms;
-    }
+.sidebar-sign-out-btn:active:not(:disabled),
+.sidebar-sign-out-btn.is-pressed:not(:disabled) {
+    transform: scale(0.98);
+    background-color: var(--danger-soft);
+    color: var(--danger);
+}
 
-    .sidebar-sign-out-btn {
-        transition:
-            transform 150ms ease,
-            background-color 150ms ease,
-            color 150ms ease,
-            opacity 150ms ease;
-    }
+.sidebar-sign-out-btn.is-exiting {
+    opacity: 0.65;
+    pointer-events: none;
+}
 
-    .sidebar-sign-out-btn:active:not(:disabled) {
-        transform: scale(0.97);
-    }
+.sidebar-sign-out-icon,
+.sidebar-sign-out-label {
+    transition: transform 180ms ease, color 180ms ease, opacity 180ms ease;
+}
 
-    .sidebar-sign-out-icon {
-        transition: transform 150ms ease;
-    }
+.sidebar-sign-out-spinner {
+    animation: sidebar-sign-out-spin 0.75s linear infinite;
+}
 
-    .sidebar-sign-out-btn:active:not(:disabled) .sidebar-sign-out-icon {
-        transform: translateX(3px);
+@keyframes sidebar-sign-out-spin {
+    to {
+        transform: rotate(360deg);
     }
 }
 
-@media (min-width: 1024px) {
-    .sidebar-sign-out-footer.is-drawer-closed,
-    .sidebar-sign-out-footer.is-drawer-open {
+@media (hover: hover) and (pointer: fine) {
+    .sidebar-sign-out-btn:hover:not(:disabled) {
         transform: none;
-        opacity: 1;
+    }
+
+    .sidebar-sign-out-btn:hover:not(:disabled) .sidebar-sign-out-icon {
+        transform: translateX(2px);
+    }
+
+    .sidebar-sign-out-btn:hover:not(:disabled) .sidebar-sign-out-label {
+        transform: translateX(1px);
+    }
+
+    .sidebar-sign-out-btn:active:not(:disabled),
+    .sidebar-sign-out-btn.is-pressed:not(:disabled) {
+        transform: scale(0.98);
     }
 }
 
@@ -504,9 +514,13 @@ textarea {
     input,
     select,
     textarea,
-    .sidebar-sign-out-footer,
     .sidebar-sign-out-btn,
-    .sidebar-sign-out-icon {
+    .sidebar-sign-out-icon,
+    .sidebar-sign-out-label {
         transition-duration: 0.01ms !important;
+    }
+
+    .sidebar-sign-out-spinner {
+        animation: none;
     }
 }

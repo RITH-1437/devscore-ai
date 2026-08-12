@@ -48,7 +48,7 @@
 <aside id="app-sidebar"
        aria-label="Primary navigation"
        class="fixed top-0 left-0 z-30 flex h-full w-72 flex-col border-r border-[var(--border-color)] bg-[var(--bg-secondary)]/95 backdrop-blur-xl transition-transform duration-300 ease-out lg:translate-x-0"
-       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+       x-bind:class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
 
     <div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-4 lg:px-6 lg:py-6">
         <x-gitradar-logo
@@ -101,52 +101,108 @@
         <a href="{{ route($item['route']) }}"
            @click="sidebarOpen = false"
            @if($isActive) aria-current="page" @endif
-           class="sidebar-nav-link relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200
+           class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200
                   {{ $isActive
-                     ? 'bg-[var(--bg-muted)] text-[var(--text-primary)] before:absolute before:left-0 before:top-1/2 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-[var(--primary)]'
-                     : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]' }}">
+                     ? 'bg-[var(--bg-muted)] font-semibold text-[var(--text-primary)]'
+                     : 'font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]' }}">
             <svg class="h-[1.125rem] w-[1.125rem] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 {!! $item['icon'] !!}
             </svg>
             <span class="truncate">{{ $item['label'] }}</span>
-            @if($isActive)
-            <span class="ml-auto h-1.5 w-1.5 shrink-0 rounded-full"
-                 style="background: var(--primary);"
-                 aria-hidden="true"></span>
-            @endif
         </a>
         @endforeach
     </nav>
 
-    <div class="sidebar-sign-out-footer border-t border-[var(--border-color)] px-2 py-4 lg:px-3"
-         :class="sidebarOpen ? 'is-drawer-open' : 'is-drawer-closed'">
-        <form action="{{ route('logout') }}" method="POST"
-              x-data="{ signingOut: false }"
-              @submit="signingOut = true">
+    <div class="border-t border-[var(--border-color)] px-2 py-4 lg:px-3">
+        <form action="{{ route('logout') }}"
+              method="POST"
+              x-data="{
+                  signingOut: false,
+                  exiting: false,
+                  pressed: false,
+                  error: null,
+                  onPress() {
+                      if (!this.signingOut) {
+                          this.pressed = true;
+                      }
+                  },
+                  onRelease() {
+                      this.pressed = false;
+                  },
+                  async submitLogout(event) {
+                      if (this.signingOut) {
+                          event.preventDefault();
+                          return;
+                      }
+                      event.preventDefault();
+                      this.signingOut = true;
+                      this.pressed = false;
+                      this.error = null;
+                      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                      try {
+                          const response = await fetch(event.target.action, {
+                              method: 'POST',
+                              headers: {
+                                  'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                                  'Accept': 'text/html',
+                              },
+                              body: new FormData(event.target),
+                              credentials: 'same-origin',
+                          });
+                          if (!response.ok) {
+                              throw new Error('logout failed');
+                          }
+                          this.exiting = true;
+                          window.setTimeout(() => {
+                              window.location.href = '/';
+                          }, reducedMotion ? 0 : 100);
+                      } catch {
+                          this.signingOut = false;
+                          this.exiting = false;
+                          this.error = 'Could not sign out. Please try again.';
+                      }
+                  },
+              }"
+              @submit="submitLogout($event)">
             @csrf
             <button type="submit"
-                    :disabled="signingOut"
+                    x-bind:disabled="signingOut"
+                    x-bind:aria-busy="signingOut.toString()"
                     aria-label="Sign out of GitRadar"
-                    class="sidebar-sign-out-btn group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-all duration-200 hover:bg-[var(--danger-soft)] hover:text-[var(--danger)] disabled:cursor-wait disabled:opacity-80">
-                <svg x-show="!signingOut"
-                     class="sidebar-sign-out-icon h-5 w-5 shrink-0"
-                     fill="none"
-                     stroke="currentColor"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                </svg>
-                <svg x-show="signingOut"
-                     x-cloak
-                     class="h-5 w-5 shrink-0 animate-spin text-[var(--danger)]"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span x-text="signingOut ? 'Signing out…' : 'Sign Out'">Sign Out</span>
+                    x-bind:class="{ 'is-exiting': exiting, 'is-pressed': pressed }"
+                    @pointerdown="onPress()"
+                    @pointerup="onRelease()"
+                    @pointerleave="onRelease()"
+                    @pointercancel="onRelease()"
+                    class="sidebar-nav-link sidebar-sign-out-btn flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-all duration-200 hover:bg-[var(--danger-soft)] hover:text-[var(--danger)] disabled:cursor-wait disabled:opacity-80">
+                <span class="relative flex h-5 w-5 shrink-0 items-center justify-center">
+                    <svg x-show="!signingOut"
+                         class="sidebar-sign-out-icon h-5 w-5"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24"
+                         aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    <svg x-show="signingOut"
+                         x-cloak
+                         class="sidebar-sign-out-spinner h-5 w-5 text-[var(--danger)]"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         aria-hidden="true">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+                <span class="sidebar-sign-out-label truncate"
+                      x-text="signingOut ? 'Signing out...' : 'Sign Out'">Sign Out</span>
             </button>
+            <p x-show="error"
+               x-cloak
+               x-text="error"
+               role="alert"
+               aria-live="polite"
+               class="mt-2 px-3 text-xs font-medium text-[var(--danger)]"></p>
         </form>
     </div>
 
