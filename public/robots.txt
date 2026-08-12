@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /dashboard
+Disallow: /repositories
+Disallow: /analysis
+Disallow: /insights
+Disallow: /profile
+Disallow: /settings
+Disallow: /logout
+Disallow: /auth/
+Disallow: /health/ai
+
+Sitemap: https://gitradar.duckdns.org/sitemap.xml

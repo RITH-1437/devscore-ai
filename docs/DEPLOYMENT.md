@@ -103,6 +103,12 @@ server {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
+    # Serve public/robots.txt directly; fall back to Laravel SeoController if missing.
+    # Avoid `location ~* \.txt$ { try_files $uri =404; }` — it breaks dynamic robots.txt.
+    location = /robots.txt {
+        try_files $uri /index.php?$query_string;
+    }
+
     location ~ \.php$ {
         fastcgi_pass unix:/var/run/php/php8.5-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
@@ -177,7 +183,11 @@ Monitor externally:
 ```bash
 curl -sf https://gitradar.duckdns.org/health
 curl -sf https://gitradar.duckdns.org/up
+curl -sf https://gitradar.duckdns.org/robots.txt
+curl -sf https://gitradar.duckdns.org/sitemap.xml
 ```
+
+**SEO files:** `public/robots.txt` is committed and served by nginx as a static file. The Laravel `SeoController@robots` route remains as a fallback when the file is absent. After changing `config/seo.php` `robots_disallow`, update `public/robots.txt` to match.
 
 ---
 
