@@ -53,10 +53,10 @@ $headerTitle = $title ?? ($pageTitles[$currentRoute] ?? null);
 </head>
 
 <body class="bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased min-h-screen"
-      x-data="{ sidebarOpen: false, sidebarExpanded: false }"
-      x-effect="document.body.classList.toggle('drawer-open', sidebarOpen && window.innerWidth < 768)"
-      @keydown.escape.window="sidebarOpen = false; sidebarExpanded = false"
-      @resize.window="if (window.innerWidth >= 1024) sidebarExpanded = false; if (window.innerWidth >= 768) sidebarOpen = false">
+      x-data="{ sidebarOpen: false }"
+      x-effect="document.body.classList.toggle('drawer-open', sidebarOpen && window.innerWidth < 1024)"
+      @keydown.escape.window="sidebarOpen = false"
+      @resize.window="if (window.innerWidth >= 1024) sidebarOpen = false">
 
     <a href="#main-content" class="skip-link">Skip to content</a>
 
@@ -65,7 +65,7 @@ $headerTitle = $title ?? ($pageTitles[$currentRoute] ?? null);
 
     <div class="relative z-10 flex min-h-screen min-w-0">
 
-        {{-- Sidebar overlay (mobile only) --}}
+        {{-- Drawer backdrop (mobile + tablet) --}}
         <div x-show="sidebarOpen"
              x-transition:enter="transition-opacity ease-out duration-200"
              x-transition:enter-start="opacity-0"
@@ -75,7 +75,7 @@ $headerTitle = $title ?? ($pageTitles[$currentRoute] ?? null);
              x-transition:leave-end="opacity-0"
              @click="sidebarOpen = false"
              aria-hidden="true"
-             class="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm md:hidden"
+             class="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm lg:hidden"
              style="display:none">
         </div>
 
@@ -83,25 +83,25 @@ $headerTitle = $title ?? ($pageTitles[$currentRoute] ?? null);
         <x-sidebar />
 
         {{-- Main content --}}
-        <div class="flex min-w-0 flex-1 flex-col md:ml-[4.75rem] lg:ml-72">
+        <div class="flex min-w-0 flex-1 flex-col lg:ml-72">
 
             {{-- Top bar --}}
             <header class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-[var(--border-color)] bg-[var(--bg-primary)]/90 px-3 py-3 backdrop-blur-xl sm:gap-3 sm:px-6 sm:py-4">
                 <div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-                    {{-- Mobile menu toggle --}}
+                    {{-- Compact header: menu + branding (mobile + tablet) --}}
                     <button type="button"
                             @click="sidebarOpen = !sidebarOpen"
                             aria-label="Toggle navigation menu"
                             aria-controls="app-sidebar"
                             :aria-expanded="sidebarOpen.toString()"
-                            class="touch-target shrink-0 rounded-lg p-2 text-[var(--text-secondary)] transition hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] md:hidden">
+                            class="touch-target shrink-0 rounded-lg p-2 text-[var(--text-secondary)] transition hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] lg:hidden">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
 
-                    {{-- Mobile branding + page context --}}
-                    <div class="min-w-0 md:hidden">
+                    {{-- Compact branding + page context (mobile + tablet) --}}
+                    <div class="min-w-0 lg:hidden">
                         <x-gitradar-logo variant="compact" class="!gap-0" />
                         @if($headerTitle)
                         <p class="truncate text-xs font-medium text-[var(--text-muted)]">{{ $headerTitle }}</p>
@@ -110,7 +110,7 @@ $headerTitle = $title ?? ($pageTitles[$currentRoute] ?? null);
 
                     {{-- Desktop page context --}}
                     @if($headerTitle)
-                    <div class="hidden min-w-0 md:block">
+                    <div class="hidden min-w-0 lg:block">
                         <p class="section-kicker">GitRadar</p>
                         <p class="truncate text-sm font-semibold text-[var(--text-primary)]">{{ $headerTitle }}</p>
                     </div>

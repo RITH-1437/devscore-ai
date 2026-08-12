@@ -40,44 +40,34 @@
     ];
 @endphp
 
+{{--
+    Navigation sidebar — one component, two modes via CSS breakpoint:
+    • < lg (1024px): off-canvas drawer, toggled by sidebarOpen
+    • >= lg: permanently visible
+--}}
 <aside id="app-sidebar"
        aria-label="Primary navigation"
-       @mouseenter="if (window.matchMedia('(min-width: 768px) and (max-width: 1023px)').matches) sidebarExpanded = true"
-       @mouseleave="sidebarExpanded = false"
-       @focusin="if (window.matchMedia('(min-width: 768px) and (max-width: 1023px)').matches) sidebarExpanded = true"
-       @focusout="if (!$el.contains($event.relatedTarget)) sidebarExpanded = false"
-       class="fixed top-0 left-0 z-30 flex h-full w-72 flex-col border-r border-[var(--border-color)] bg-[var(--bg-secondary)]/95 backdrop-blur-xl transition-[width,box-shadow] duration-300 ease-out md:w-[4.75rem] lg:w-72"
-       :class="[
-           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
-           sidebarExpanded ? 'shadow-[var(--shadow-lg)]' : 'md:max-lg:overflow-hidden',
-       ]"
-       :style="sidebarExpanded && window.matchMedia('(min-width: 768px) and (max-width: 1023px)').matches ? 'width: 18rem; z-index: 40;' : null">
+       class="fixed top-0 left-0 z-30 flex h-full w-72 flex-col border-r border-[var(--border-color)] bg-[var(--bg-secondary)]/95 backdrop-blur-xl transition-transform duration-300 ease-out lg:translate-x-0"
+       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
 
-    {{-- Logo: icon-only on tablet rail; full text when expanded or on mobile/desktop --}}
     <div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-4 lg:px-6 lg:py-6">
-        <div class="flex min-w-0 flex-1 justify-center lg:justify-start"
-             :class="sidebarExpanded ? 'md:max-lg:justify-start' : ''">
-            <x-gitradar-logo
-                variant="full"
-                x-on:click="sidebarOpen = false"
-                class="w-full justify-center lg:w-auto lg:justify-start [&>span]:block [&>span]:overflow-hidden [&>span]:transition-[max-width] [&>span]:duration-300 [&>span]:max-w-[160px] md:max-lg:[&>span]:max-w-[2.25rem]"
-                x-bind:class="sidebarExpanded ? 'md:max-lg:[&>span]:!max-w-[160px]' : ''"
-            />
-        </div>
+        <x-gitradar-logo
+            variant="full"
+            x-on:click="sidebarOpen = false"
+            class="min-w-0"
+        />
         <button type="button"
                 @click="sidebarOpen = false"
                 aria-label="Close navigation menu"
-                class="touch-target shrink-0 rounded-lg p-2 text-[var(--text-secondary)] transition hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] md:hidden">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="touch-target shrink-0 rounded-lg p-2 text-[var(--text-secondary)] transition hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] lg:hidden">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
         </button>
     </div>
 
-    {{-- User info --}}
     @auth
-    <div class="border-b border-[var(--border-color)] px-4 py-4 max-md:block lg:block"
-         :class="sidebarExpanded ? 'md:max-lg:block' : 'md:max-lg:hidden'">
+    <div class="border-b border-[var(--border-color)] px-4 py-4">
         <a href="{{ route('profile.index') }}" class="block" @click="sidebarOpen = false">
             <div class="group flex cursor-pointer items-center gap-3 rounded-xl bg-[var(--bg-muted)] px-3 py-3 transition-all duration-200 hover:bg-[var(--bg-hover)]">
                 @if(auth()->user()->githubAccount?->avatar_url)
@@ -95,7 +85,7 @@
                         {{ auth()->user()->githubAccount?->username ?? '' }}
                     </p>
                 </div>
-                <svg class="ml-auto h-4 w-4 shrink-0 text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="ml-auto h-4 w-4 shrink-0 text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </div>
@@ -103,7 +93,6 @@
     </div>
     @endauth
 
-    {{-- Navigation --}}
     <nav class="flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-2 py-4 lg:px-3" aria-label="Main">
         @foreach($navItems as $item)
         @php
@@ -112,20 +101,16 @@
         <a href="{{ route($item['route']) }}"
            @click="sidebarOpen = false"
            @if($isActive) aria-current="page" @endif
-           :title="sidebarExpanded ? '' : '{{ $item['label'] }}'"
-           class="sidebar-nav-link relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 lg:justify-start lg:px-3 md:max-lg:justify-center md:max-lg:px-2
+           class="sidebar-nav-link relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200
                   {{ $isActive
                      ? 'bg-[var(--bg-muted)] text-[var(--text-primary)] before:absolute before:left-0 before:top-1/2 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-[var(--primary)]'
-                     : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]' }}"
-           :class="sidebarExpanded ? 'md:max-lg:!justify-start md:max-lg:!px-3' : ''">
+                     : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]' }}">
             <svg class="h-[1.125rem] w-[1.125rem] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 {!! $item['icon'] !!}
             </svg>
-            <span class="sidebar-label truncate max-md:inline lg:inline"
-                  :class="sidebarExpanded ? 'md:max-lg:!inline' : 'md:max-lg:hidden'">{{ $item['label'] }}</span>
+            <span class="truncate">{{ $item['label'] }}</span>
             @if($isActive)
-            <span class="sidebar-active-dot ml-auto hidden h-1.5 w-1.5 shrink-0 rounded-full lg:block"
-                 :class="sidebarExpanded ? 'md:max-lg:!block' : 'md:max-lg:hidden'"
+            <span class="ml-auto h-1.5 w-1.5 shrink-0 rounded-full"
                  style="background: var(--primary);"
                  aria-hidden="true"></span>
             @endif
@@ -133,19 +118,15 @@
         @endforeach
     </nav>
 
-    {{-- Footer: logout --}}
     <div class="border-t border-[var(--border-color)] px-2 py-4 lg:px-3">
         <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit"
-                    :title="sidebarExpanded ? '' : 'Sign Out'"
-                    class="sidebar-nav-link flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-all duration-200 hover:bg-[var(--danger-soft)] hover:text-[var(--danger)] lg:justify-start lg:px-3 md:max-lg:justify-center md:max-lg:px-2"
-                    :class="sidebarExpanded ? 'md:max-lg:!justify-start md:max-lg:!px-3' : ''">
+                    class="sidebar-nav-link flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-all duration-200 hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]">
                 <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                 </svg>
-                <span class="sidebar-label max-md:inline lg:inline"
-                      :class="sidebarExpanded ? 'md:max-lg:!inline' : 'md:max-lg:hidden'">Sign Out</span>
+                <span>Sign Out</span>
             </button>
         </form>
     </div>

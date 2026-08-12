@@ -7,7 +7,7 @@
         <div class="min-w-0">
             <h1 class="page-heading text-[var(--text-primary)]">Dashboard</h1>
             <p class="page-subheading break-anywhere">
-                Welcome back, <span class="font-semibold text-[var(--text-primary)]">{{ auth()->user()->name }}</span>
+                Welcome, <span class="font-semibold text-[var(--text-primary)]">{{ auth()->user()->name }}</span>
                 @if($account?->username)
                 · <a href="https://github.com/{{ $account->username }}" target="_blank" rel="noopener noreferrer"
                      class="text-[var(--primary)] hover:text-[var(--primary-hover)] transition">
