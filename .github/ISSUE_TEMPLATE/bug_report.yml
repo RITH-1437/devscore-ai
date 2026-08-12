@@ -1,0 +1,85 @@
+name: Bug report
+description: Something is broken or not working as expected
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Fill in what you can — screenshots and logs help a lot.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What went wrong?
+      placeholder: The repository sync page shows an error after login...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this?
+      placeholder: |
+        1. Sign in with GitHub
+        2. Go to Repositories
+        3. Click Sync
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: Repositories should sync and appear in the list.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: A 500 error appears and no repositories are listed.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Git commit or version
+      description: Branch name, commit hash, or deployment date if known
+      placeholder: main @ abc1234
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, PHP version, database, queue driver
+      placeholder: |
+        OS: Windows 11
+        PHP: 8.3.12
+        Database: MySQL 8.0
+        Queue: database
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser / device (if UI-related)
+      placeholder: Chrome 131, 1280×800
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Paste redacted logs. Do not include API keys, tokens, or `.env` contents.
+      placeholder: Paste error from storage/logs/laravel.log or attach a screenshot
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that might help

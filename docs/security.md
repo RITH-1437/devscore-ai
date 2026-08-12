@@ -117,10 +117,13 @@ Review Laravel security advisories: https://github.com/laravel/framework/securit
 
 ## Reporting Issues
 
-Report security vulnerabilities privately to project maintainers — do not open public issues for undisclosed vulnerabilities.
+Report security vulnerabilities privately — see [SECURITY.md](../SECURITY.md) at the repository root. Do not open public issues for undisclosed vulnerabilities.
+
+For implementation-level security details in this document, see the sections above.
 
 ## Related Docs
 
+- [SECURITY.md](../SECURITY.md) — vulnerability reporting policy
 - [ULTIMATE_AUDIT.md](ULTIMATE_AUDIT.md)
 - [FINAL_PRODUCTION_AUDIT.md](FINAL_PRODUCTION_AUDIT.md)
 - [authentication.md](authentication.md)
