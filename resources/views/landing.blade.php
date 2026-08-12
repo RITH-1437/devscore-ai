@@ -102,7 +102,7 @@
     {{-- Hero --}}
     <section class="relative z-10 mx-auto max-w-5xl px-4 pb-16 pt-12 text-center sm:px-6 sm:pb-20 sm:pt-24" aria-labelledby="hero-heading">
 
-        <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-500/25 bg-orange-500/10 px-3 py-1.5 text-xs font-medium text-orange-200 sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
+        <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-500/25 bg-orange-500/10 px-3 py-1.5 text-xs font-medium text-white sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
             AI GitHub portfolio analysis · multi-model scoring
         </div>
 
@@ -154,7 +154,7 @@
 
             @foreach($features as $f)
             <div class="rounded-xl border border-white/[0.08] bg-white/[0.03] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.18)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.14] hover:bg-white/[0.05] hover:shadow-[0_4px_14px_rgba(0,0,0,0.22)] sm:p-6">
-                <h3 class="mb-2 text-base font-semibold text-white">{{ $f['title'] }}</h3>
+                <h3 class="mb-2 text-base font-semibold text-orange-300">{{ $f['title'] }}</h3>
                 <p class="text-sm leading-relaxed text-slate-400">{{ $f['desc'] }}</p>
             </div>
             @endforeach
