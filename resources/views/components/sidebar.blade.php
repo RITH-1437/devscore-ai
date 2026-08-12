@@ -118,15 +118,34 @@
         @endforeach
     </nav>
 
-    <div class="border-t border-[var(--border-color)] px-2 py-4 lg:px-3">
-        <form action="{{ route('logout') }}" method="POST">
+    <div class="sidebar-sign-out-footer border-t border-[var(--border-color)] px-2 py-4 lg:px-3"
+         :class="sidebarOpen ? 'is-drawer-open' : 'is-drawer-closed'">
+        <form action="{{ route('logout') }}" method="POST"
+              x-data="{ signingOut: false }"
+              @submit="signingOut = true">
             @csrf
             <button type="submit"
-                    class="sidebar-nav-link flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-all duration-200 hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]">
-                <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    :disabled="signingOut"
+                    aria-label="Sign out of GitRadar"
+                    class="sidebar-sign-out-btn group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-all duration-200 hover:bg-[var(--danger-soft)] hover:text-[var(--danger)] disabled:cursor-wait disabled:opacity-80">
+                <svg x-show="!signingOut"
+                     class="sidebar-sign-out-icon h-5 w-5 shrink-0"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                 </svg>
-                <span>Sign Out</span>
+                <svg x-show="signingOut"
+                     x-cloak
+                     class="h-5 w-5 shrink-0 animate-spin text-[var(--danger)]"
+                     fill="none"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span x-text="signingOut ? 'Signing out…' : 'Sign Out'">Sign Out</span>
             </button>
         </form>
     </div>
