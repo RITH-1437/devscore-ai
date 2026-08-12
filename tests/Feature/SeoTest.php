@@ -2,12 +2,18 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class SeoTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_home_is_public_and_indexable(): void
     {
+        $this->withoutVite();
+
         $response = $this->get('/');
 
         $response->assertOk();
@@ -46,7 +52,9 @@ class SeoTest extends TestCase
 
     public function test_authenticated_app_layout_has_noindex(): void
     {
-        $user = \App\Models\User::factory()->create();
+        $this->withoutVite();
+
+        $user = User::factory()->create();
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 
