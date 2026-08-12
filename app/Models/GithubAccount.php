@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Crypt;
 
 class GithubAccount extends Model
 {
@@ -44,6 +46,30 @@ class GithubAccount extends Model
         'github_created_at' => 'datetime',
         'github_updated_at' => 'datetime',
     ];
+
+    /**
+     * Encrypt tokens at rest. Legacy plaintext values remain readable until the
+     * next OAuth login re-saves the token.
+     */
+    protected function accessToken(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value): ?string {
+                if ($value === null || $value === '') {
+                    return null;
+                }
+
+                try {
+                    return Crypt::decryptString($value);
+                } catch (\Throwable) {
+                    return $value;
+                }
+            },
+            set: fn (?string $value): ?string => $value === null || $value === ''
+                ? null
+                : Crypt::encryptString($value),
+        );
+    }
 
     // ─── Relationships ──────────────────────────────────────────────────────────
 

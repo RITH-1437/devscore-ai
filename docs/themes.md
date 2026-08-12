@@ -1,6 +1,6 @@
 # Themes
 
-GitRadar supports light, dark, and system themes on authenticated pages.
+GitRadar supports light and dark themes on authenticated pages. Light is the default.
 
 ## Storage
 
@@ -8,11 +8,11 @@ Preference is stored in browser `localStorage`:
 
 ```
 Key: gitradar-theme
-Values: light | dark | system
+Values: light | dark
 Default: light
 ```
 
-Legacy key `devscore-theme` is read as fallback for backward compatibility but writes use `gitradar-theme`.
+Legacy key `devscore-theme` is read as fallback for backward compatibility but writes use `gitradar-theme`. Any stored `system` value is migrated to `light` on the next visit.
 
 ## Implementation
 
@@ -21,16 +21,16 @@ Legacy key `devscore-theme` is read as fallback for backward compatibility but w
 An inline script in `resources/views/components/layouts/app.blade.php` runs **before first paint**:
 
 1. Read `gitradar-theme` from localStorage
-2. If `system`, resolve via `prefers-color-scheme`
-3. Add `dark` class to `<html>` when resolved theme is dark
+2. Normalize to `light` or `dark` (default `light`)
+3. Add `dark` class to `<html>` when theme is dark
 
-### Theme switcher
+### Theme toggle
 
-Alpine.js component in the app layout header and Settings page:
+Shared Alpine.js store in `resources/js/app.js`:
 
-- Dropdown with Light / Dark / System options
+- Header: single button toggles `light` ↔ `dark` on click
+- Settings: Light / Dark segmented buttons
 - `apply(value)` updates localStorage, `data-theme-pref` attribute, and `dark` class
-- Listens for system preference changes when pref is `system`
 
 ### CSS variables
 
@@ -48,7 +48,7 @@ The public landing page (`landing.blade.php`) uses a fixed dark aesthetic and do
 
 ## Settings Page
 
-Settings (`/settings`) duplicates the theme picker for users who prefer changing it there.
+Settings (`/settings`) offers Light / Dark buttons for users who prefer changing the theme there.
 
 ## Related Docs
 

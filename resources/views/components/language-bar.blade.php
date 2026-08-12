@@ -12,12 +12,12 @@ $barPct = ($max ?? $total) > 0 ? round(($count / ($max ?? $total)) * 100) : 0;
 @endphp
 
 <div {{ $attributes->merge(['class' => 'space-y-2']) }}>
-    <div class="flex justify-between items-center text-sm gap-3">
-        <span class="font-semibold text-[var(--text-primary)] flex items-center gap-2 min-w-0">
-            <span class="w-3 h-3 rounded-full shrink-0" style="background: {{ $langColor }};" aria-hidden="true"></span>
-            <span class="truncate">{{ $language ?: 'Unknown' }}</span>
+    <div class="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <span class="flex min-w-0 items-center gap-2 font-semibold text-[var(--text-primary)]">
+            <span class="h-3 w-3 shrink-0 rounded-full" style="background: {{ $langColor }};" aria-hidden="true"></span>
+            <span class="break-anywhere">{{ $language ?: 'Unknown' }}</span>
         </span>
-        <span class="text-[var(--text-muted)] shrink-0">{{ $count }} repos · {{ $pct }}%</span>
+        <span class="shrink-0 text-[var(--text-muted)]">{{ $count }} repos · {{ $pct }}%</span>
     </div>
     <div class="h-2.5 bg-[var(--bg-muted)] rounded-full overflow-hidden" role="presentation">
         <div class="h-full rounded-full transition-all duration-700"

@@ -60,7 +60,6 @@ trait ParsesAndValidatesAnalysisResponses
 
         Log::warning("{$providerLabel}: All JSON parsing strategies failed", [
             'content_length' => strlen($content),
-            'content'        => substr($content, 0, 500),
             'last_error'     => json_last_error_msg(),
         ]);
 

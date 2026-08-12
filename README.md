@@ -17,15 +17,25 @@ After signing in with GitHub, GitRadar syncs your public repositories in the bac
 - Insights page (language distribution, topics, activity timeline, score distribution)
 - Developer profile page with GitHub metadata
 - Export analyzed repositories as JSON or Markdown
-- Light / dark / system theme (localStorage)
+- Light / dark theme (localStorage)
 - Background jobs for sync and AI analysis
+
+## Production
+
+Live deployment guide and audit reports:
+
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — EC2, Nginx, PHP-FPM
+- [docs/QUEUE.md](docs/QUEUE.md) — Supervisor workers
+- [docs/PRODUCTION_BACKUP.md](docs/PRODUCTION_BACKUP.md) — PostgreSQL backups
+- [docs/FINAL_PRODUCTION_AUDIT.md](docs/FINAL_PRODUCTION_AUDIT.md) — latest production audit
+- [docs/security.md](docs/security.md) — security checklist
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
 | Backend | PHP 8.3+, Laravel 13 |
-| Database | MySQL |
+| Database | PostgreSQL (production) / MySQL or SQLite (local) |
 | Auth | Laravel Socialite (GitHub OAuth) |
 | Queue | Database (default), Redis optional |
 | Cache | File (default), Redis optional |

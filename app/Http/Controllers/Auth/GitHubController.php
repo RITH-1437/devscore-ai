@@ -37,31 +37,53 @@ class GitHubController extends Controller
         }
 
         try {
-            // Find or create user
-            $user = User::firstOrCreate(
-                ['email' => $githubUser->getEmail() ?? $githubUser->getNickname() . '@github.invalid'],
-                [
-                    'name'     => $githubUser->getName() ?? $githubUser->getNickname() ?? 'GitHub User',
-                    'password' => bcrypt(Str::random(40)),
-                ]
-            );
+            $githubId = (string) $githubUser->getId();
+            $existingAccount = GithubAccount::query()
+                ->where('github_id', $githubId)
+                ->first();
 
-            // Update name if it was previously the default
-            if ($user->name === 'GitHub User' && $githubUser->getName()) {
-                $user->update(['name' => $githubUser->getName()]);
+            if ($existingAccount) {
+                // Never reassign github_accounts.user_id — prevents account takeover when
+                // the same GitHub identity logs in under a different local user record.
+                $existingAccount->update([
+                    'username'     => $githubUser->getNickname(),
+                    'name'         => $githubUser->getName(),
+                    'avatar_url'   => $githubUser->getAvatar(),
+                    'access_token' => $githubUser->token,
+                ]);
+
+                $user = $existingAccount->user;
+
+                if ($user === null) {
+                    Log::error('GitHub account has no linked user.', ['github_account_id' => $existingAccount->id]);
+                    return redirect('/')->withErrors(['github' => 'Login failed. Please contact support.']);
+                }
+
+                if ($user->name === 'GitHub User' && $githubUser->getName()) {
+                    $user->update(['name' => $githubUser->getName()]);
+                }
+            } else {
+                $user = User::firstOrCreate(
+                    ['email' => $githubUser->getEmail() ?? $githubUser->getNickname() . '@github.invalid'],
+                    [
+                        'name'     => $githubUser->getName() ?? $githubUser->getNickname() ?? 'GitHub User',
+                        'password' => bcrypt(Str::random(40)),
+                    ]
+                );
+
+                if ($user->name === 'GitHub User' && $githubUser->getName()) {
+                    $user->update(['name' => $githubUser->getName()]);
+                }
+
+                GithubAccount::create([
+                    'user_id'      => $user->id,
+                    'github_id'    => $githubId,
+                    'username'     => $githubUser->getNickname(),
+                    'name'         => $githubUser->getName(),
+                    'avatar_url'   => $githubUser->getAvatar(),
+                    'access_token' => $githubUser->token,
+                ]);
             }
-
-            // Upsert GitHub account (token refresh)
-            $githubAccount = GithubAccount::updateOrCreate(
-                ['github_id' => $githubUser->getId()],
-                [
-                    'user_id'     => $user->id,
-                    'username'    => $githubUser->getNickname(),
-                    'name'        => $githubUser->getName(),
-                    'avatar_url'  => $githubUser->getAvatar(),
-                    'access_token'=> $githubUser->token,
-                ]
-            );
 
             Auth::login($user, remember: true);
 

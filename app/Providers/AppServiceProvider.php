@@ -15,6 +15,7 @@ use App\Services\RepositoryAnalysisService;
 use App\Services\RepositorySyncService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -41,6 +42,20 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register policies
         Gate::policy(Repository::class, RepositoryPolicy::class);
+
+        // Scope repository route binding to the authenticated user's data.
+        Route::bind('repository', function (string $value) {
+            $user = auth()->user();
+
+            if ($user === null) {
+                abort(404);
+            }
+
+            return Repository::query()
+                ->forUser($user)
+                ->whereKey($value)
+                ->firstOrFail();
+        });
 
         // Register Blade directives
         Blade::directive('languageColor', function ($language) {

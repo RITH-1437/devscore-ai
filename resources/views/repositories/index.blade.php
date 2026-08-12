@@ -1,11 +1,11 @@
-<x-layouts.app>
+<x-layouts.app title="Repositories">
 
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="mx-auto min-w-0 max-w-7xl space-y-6">
 
     {{-- Header --}}
     <div>
-        <h1 class="text-3xl font-black tracking-tight text-[var(--text-primary)]">Repositories</h1>
-        <p class="text-[var(--text-secondary)] mt-1 text-sm">Browse and analyze your GitHub repositories</p>
+        <h1 class="page-heading text-[var(--text-primary)]">Repositories</h1>
+        <p class="page-subheading">Browse and analyze your GitHub repositories</p>
     </div>
 
     {{-- Soft search + filters --}}
@@ -86,7 +86,7 @@
                 this.debouncedSearch();
             }
         }"
-        class="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
+        class="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 shadow-[var(--shadow-card)] sm:p-5">
 
         <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
 

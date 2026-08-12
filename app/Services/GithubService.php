@@ -69,8 +69,8 @@ class GitHubService
                 throw new RuntimeException('Could not connect to GitHub API: ' . $e->getMessage());
             } catch (RequestException $e) {
                 Log::error('GitHub request failed.', [
-                    'status' => $e->response?->status(),
-                    'body'   => $e->response?->body(),
+                    'status'       => $e->response?->status(),
+                    'body_length'  => strlen((string) $e->response?->body()),
                 ]);
                 throw new RuntimeException('GitHub API request failed: ' . $e->getMessage());
             }

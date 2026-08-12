@@ -1,23 +1,16 @@
-<x-layouts.app>
+<x-layouts.app title="Settings">
 
-<div class="max-w-5xl mx-auto space-y-8">
+<div class="mx-auto min-w-0 max-w-5xl space-y-6 sm:space-y-8">
 
     {{-- Header --}}
     <div>
-        <h1 class="text-3xl font-black tracking-tight text-[var(--text-primary)]">Settings</h1>
-        <p class="text-[var(--text-secondary)] mt-1 text-sm">Manage your account and preferences.</p>
+        <h1 class="page-heading text-[var(--text-primary)]">Settings</h1>
+        <p class="page-subheading">Manage your account and preferences.</p>
     </div>
 
     {{-- Account Section --}}
-    <div class="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
-        <h2 class="font-bold text-lg text-[var(--text-primary)] mb-5 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: var(--primary-soft);">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-            </div>
-            <span>Account</span>
-        </h2>
+    <div class="panel p-4 sm:p-6">
+        <h2 class="section-title mb-5">Account</h2>
 
         <div class="space-y-5">
             <div class="flex flex-col gap-2 py-3 border-b border-[var(--border-color)] sm:flex-row sm:items-center sm:justify-between">
@@ -46,15 +39,8 @@
 
     {{-- GitHub Account Section --}}
     @if($account)
-    <div class="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
-        <h2 class="font-bold text-lg text-[var(--text-primary)] mb-5 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: var(--primary-soft);">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0C5.37 0 0 5.373 0 12c0 5.303 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.298 24 12c0-6.627-5.373-12-12-12"/>
-                </svg>
-            </div>
-            <span>GitHub Account</span>
-        </h2>
+    <div class="panel p-4 sm:p-6">
+        <h2 class="section-title mb-5">GitHub account</h2>
 
         <div class="flex flex-col sm:flex-row sm:items-start gap-5 mb-6">
             <img src="{{ $account->avatar_url }}" 
@@ -167,88 +153,42 @@
     @endif
 
     {{-- Appearance Section --}}
-    <div class="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
-        <h2 class="font-bold text-lg text-[var(--text-primary)] mb-5 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: var(--primary-soft);">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                </svg>
-            </div>
-            <span>Appearance</span>
-        </h2>
+    <div class="panel p-4 sm:p-6">
+        <h2 class="section-title mb-5">Appearance</h2>
 
         <div class="space-y-4">
             <div class="flex flex-col gap-3 py-3 border-b border-[var(--border-color)] sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <span class="text-sm font-medium text-[var(--text-primary)]">Theme</span>
-                    <p class="text-xs text-[var(--text-muted)] mt-0.5">Choose between light, dark, or system theme</p>
+                    <p class="text-xs text-[var(--text-muted)] mt-0.5">Switch between light and dark mode</p>
                 </div>
-                <div x-data="{
-                        open: false,
-                        pref: localStorage.getItem('gitradar-theme') || localStorage.getItem('devscore-theme') || 'light',
-                        options: [
-                            { value: 'light', label: 'Light' },
-                            { value: 'dark', label: 'Dark' },
-                            { value: 'system', label: 'System' },
-                        ],
-                        apply(value) {
-                            this.pref = value;
-                            localStorage.setItem('gitradar-theme', value);
-                            document.documentElement.setAttribute('data-theme-pref', value);
-                            const resolved = value === 'system'
-                                ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-                                : value;
-                            document.documentElement.classList.toggle('dark', resolved === 'dark');
-                            this.open = false;
-                        }
-                    }"
-                    @keydown.escape.window="open = false"
-                    class="relative w-full sm:w-auto">
+                <div x-data="themeToggle" class="flex w-full gap-2 sm:w-auto">
                     <button type="button"
-                            @click="open = !open"
-                            aria-haspopup="menu"
-                            :aria-expanded="open.toString()"
-                            class="flex w-full items-center justify-between gap-2 px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] hover:bg-[var(--bg-hover)] text-sm font-medium text-[var(--text-primary)] transition sm:w-auto">
-                        <span x-text="pref === 'dark' ? 'Dark' : pref === 'system' ? 'System' : 'Light'">Theme</span>
-                        <svg class="w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
+                            @click="set('light')"
+                            :aria-pressed="(pref === 'light').toString()"
+                            class="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition sm:flex-none sm:min-w-[6.5rem]"
+                            :class="pref === 'light'
+                                ? 'border-[var(--primary-soft-border)] bg-[var(--primary-soft)] text-[var(--primary)]'
+                                : 'border-[var(--border-color)] bg-[var(--bg-muted)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'">
+                        Light
                     </button>
-                    <div x-show="open"
-                         x-transition
-                         @click.outside="open = false"
-                         role="menu"
-                         class="absolute right-0 z-20 mt-2 w-full min-w-36 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] py-1.5 shadow-lg sm:w-36"
-                         style="display:none;">
-                        <template x-for="option in options" :key="option.value">
-                            <button type="button"
-                                    @click="apply(option.value)"
-                                    role="menuitemradio"
-                                    :aria-checked="(pref === option.value).toString()"
-                                    class="flex w-full items-center justify-between px-3.5 py-2 text-left text-sm text-[var(--text-secondary)] transition hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
-                                    :class="pref === option.value ? 'font-semibold text-[var(--text-primary)]' : ''">
-                                <span x-text="option.label"></span>
-                                <svg x-show="pref === option.value" class="h-3.5 w-3.5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                            </button>
-                        </template>
-                    </div>
+                    <button type="button"
+                            @click="set('dark')"
+                            :aria-pressed="(pref === 'dark').toString()"
+                            class="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition sm:flex-none sm:min-w-[6.5rem]"
+                            :class="pref === 'dark'
+                                ? 'border-[var(--primary-soft-border)] bg-[var(--primary-soft)] text-[var(--primary)]'
+                                : 'border-[var(--border-color)] bg-[var(--bg-muted)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'">
+                        Dark
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     {{-- Danger Zone --}}
-    <div class="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
-        <h2 class="font-bold text-lg text-[var(--text-primary)] mb-5 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: var(--danger-soft);">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--danger);">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <span>Danger Zone</span>
-        </h2>
+    <div class="panel p-4 sm:p-6" style="border-color: var(--danger-soft-border);">
+        <h2 class="section-title mb-5 text-[var(--danger)]">Danger zone</h2>
 
         <div class="space-y-5">
             <div class="p-4 rounded-xl border" style="background: var(--danger-soft); border-color: var(--danger-soft-border);">

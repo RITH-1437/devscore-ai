@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
+})->name('health');
+
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
@@ -65,10 +69,12 @@ Route::middleware(['auth'])->group(function () {
 
         // Toggle pin/feature
         Route::post('/{repository}/pin', [RepositoryController::class, 'togglePin'])
-            ->name('pin');
+            ->name('pin')
+            ->middleware('throttle:30,1');
 
         Route::post('/{repository}/feature', [RepositoryController::class, 'toggleFeature'])
-            ->name('feature');
+            ->name('feature')
+            ->middleware('throttle:30,1');
 
         // Export
         Route::get('/{repository}/export/json', [RepositoryController::class, 'exportJson'])
@@ -108,7 +114,8 @@ Route::middleware(['auth'])->group(function () {
 
     // ── AI Health (authenticated) ──────────────────────────────────────────
     Route::get('/health/ai', AiHealthController::class)
-        ->name('health.ai');
+        ->name('health.ai')
+        ->middleware('throttle:12,1');
 
     // ── Logout (POST only — CSRF protected) ────────────────────────────────
     Route::post('/logout', [SettingsController::class, 'logout'])

@@ -1,20 +1,20 @@
-<x-layouts.app>
+<x-layouts.app title="{{ $repository->name }}">
 
-<div class="max-w-5xl mx-auto space-y-6">
+<div class="mx-auto min-w-0 max-w-5xl space-y-5 sm:space-y-6">
 
     {{-- Breadcrumb --}}
-    <nav class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-        <a href="{{ route('repositories.index') }}" class="hover:text-[var(--text-primary)] transition">Repositories</a>
-        <span>/</span>
-        <span class="text-[var(--text-primary)]">{{ $repository->name }}</span>
+    <nav class="flex min-w-0 items-center gap-2 text-sm text-[var(--text-muted)]">
+        <a href="{{ route('repositories.index') }}" class="shrink-0 transition hover:text-[var(--text-primary)]">Repositories</a>
+        <span class="shrink-0">/</span>
+        <span class="break-anywhere text-[var(--text-primary)]">{{ $repository->name }}</span>
     </nav>
 
     {{-- Repository Header --}}
-    <div class="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
-        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-3 flex-wrap mb-2">
-                    <h1 class="text-2xl font-black">{{ $repository->name }}</h1>
+    <div class="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 shadow-[var(--shadow-card)] sm:p-6">
+        <div class="flex flex-col justify-between gap-5 sm:flex-row sm:items-start sm:gap-4">
+            <div class="min-w-0 flex-1">
+                <div class="mb-2 flex flex-wrap items-center gap-2 sm:gap-3">
+                    <h1 class="break-anywhere text-xl font-black sm:text-2xl">{{ $repository->name }}</h1>
 
                     @if($repository->language)
                     @php $langColor = \App\Helpers\LanguageColorHelper::getLanguageColor($repository->language); @endphp
@@ -82,24 +82,26 @@
             </div>
 
             {{-- Right: score + actions --}}
-            <div class="flex flex-col items-end gap-3 shrink-0">
+            <div class="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
                 @if($repository->isAnalyzed())
-                <x-score-ring :score="$repository->score" :size="90" :stroke="8" label="AI Score" />
+                <div class="flex justify-center sm:justify-end">
+                    <x-score-ring :score="$repository->score" :size="90" :stroke="8" label="AI Score" />
+                </div>
                 @endif
 
-                <div class="flex items-center gap-2">
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:flex sm:items-center">
                     <a href="{{ $repository->html_url }}" target="_blank"
-                       class="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--bg-muted)] hover:bg-[var(--bg-hover)] border border-[var(--border-color)] text-sm font-medium transition">
+                       class="touch-target flex items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] px-4 py-2.5 text-sm font-medium transition hover:bg-[var(--bg-hover)]">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 0C5.37 0 0 5.373 0 12c0 5.303 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.298 24 12c0-6.627-5.373-12-12-12"/>
                         </svg>
                         GitHub
                     </a>
 
-                    <form action="{{ route('repositories.pin', $repository) }}" method="POST">
+                    <form action="{{ route('repositories.pin', $repository) }}" method="POST" class="w-full sm:w-auto">
                         @csrf
                         <button type="submit"
-                                class="flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition
+                                class="touch-target flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition
                                        {{ $repository->is_pinned
                                           ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
                                           : 'bg-[var(--bg-muted)] border-[var(--border-color)] hover:bg-[var(--bg-hover)]' }}">
@@ -126,12 +128,12 @@
     @endphp
 
     @if($uiState === 'IDLE' || $uiState === 'ERROR')
-    <div class="p-6 rounded-2xl border" style="background: var(--primary-soft); border-color: var(--primary-soft-border);">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
+    <div class="p-4 sm:p-6 rounded-2xl border" style="background: var(--primary-soft); border-color: var(--primary-soft-border);">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div class="min-w-0">
                 <h3 class="font-bold mb-1">Run AI Analysis</h3>
                 <p class="text-[var(--text-secondary)] text-sm">
-                    Get a comprehensive score, strengths, weaknesses, recruiter insights, and career recommendations.
+                    Score, strengths, weaknesses, and career recommendations for this repository.
                 </p>
                 @if($uiState === 'ERROR')
                 <div class="mt-3 flex items-start gap-2 text-red-400 text-xs rounded-xl bg-red-500/[0.08] border border-red-500/20 px-3 py-2 max-w-xl">
@@ -148,12 +150,12 @@
                 @endif
             </div>
             <form action="{{ route('repositories.analyze', $repository) }}" method="POST"
-                  class="shrink-0" x-data="{ submitting: false }" @submit="submitting = true">
+                  class="w-full shrink-0 sm:w-auto" x-data="{ submitting: false }" @submit="submitting = true">
                 @csrf
                 <button type="submit"
                         :disabled="submitting"
                         :class="submitting ? 'opacity-60 cursor-not-allowed' : ''"
-                        class="flex items-center gap-2 px-6 py-3 rounded-xl text-white font-bold text-sm shadow-lg transition-all duration-200 hover:-translate-y-0.5"
+                        class="touch-target flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-lg transition-all duration-200 sm:w-auto"
                         style="background: var(--primary);">
                     <svg x-show="submitting" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -230,7 +232,7 @@
     @endphp
 
     {{-- Scores overview --}}
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
         @foreach([
             ['label' => 'AI Score',         'value' => $score . '/100',     'color' => 'violet'],
             ['label' => 'Difficulty',        'value' => ucfirst($difficulty),'color' => 'blue'],
@@ -239,9 +241,9 @@
             ['label' => 'Hiring Prob.',      'value' => $hiringProb . '%',   'color' => 'amber'],
             ['label' => 'Experience',        'value' => $estimatedExp,       'color' => 'rose'],
         ] as $metric)
-        <div class="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-center">
-            <p class="text-[var(--text-muted)] text-xs mb-1">{{ $metric['label'] }}</p>
-            <p class="font-black text-lg leading-tight">{{ $metric['value'] }}</p>
+        <div class="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-3 text-center sm:p-4">
+            <p class="mb-1 text-[10px] text-[var(--text-muted)] sm:text-xs">{{ $metric['label'] }}</p>
+            <p class="break-anywhere text-base font-black leading-tight sm:text-lg">{{ $metric['value'] }}</p>
         </div>
         @endforeach
     </div>
@@ -340,7 +342,7 @@
 
         @if(!empty($resumeSuggestions))
         <div class="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)]">
-            <h3 class="font-bold text-sm mb-4 text-emerald-400">📄 Resume Suggestions</h3>
+            <h3 class="font-bold text-sm mb-4 text-emerald-400">Resume Suggestions</h3>
             <ul class="space-y-2">
                 @foreach($resumeSuggestions as $item)
                 <li class="text-sm text-[var(--text-secondary)] flex items-start gap-2">
@@ -353,7 +355,7 @@
 
         @if(!empty($interviewQuestions))
         <div class="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)]">
-            <h3 class="font-bold text-sm mb-4 text-violet-600 dark:text-violet-400">❓ Interview Questions</h3>
+            <h3 class="font-bold text-sm mb-4 text-violet-600 dark:text-violet-400">Interview Questions</h3>
             <ul class="space-y-2">
                 @foreach($interviewQuestions as $item)
                 <li class="text-sm text-[var(--text-secondary)] flex items-start gap-2">
@@ -366,7 +368,7 @@
 
         @if(!empty($bestCompanies))
         <div class="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)]">
-            <h3 class="font-bold text-sm mb-4 text-orange-400">🏢 Best Companies to Apply</h3>
+            <h3 class="font-bold text-sm mb-4 text-orange-400">Target Companies</h3>
             <div class="flex flex-wrap gap-2">
                 @foreach($bestCompanies as $company)
                 <span class="px-3 py-1.5 rounded-lg text-xs font-medium bg-orange-500/10 border border-orange-500/20 text-orange-300">
@@ -379,7 +381,7 @@
 
         @if(!empty($improvementRoadmap))
         <div class="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)]">
-            <h3 class="font-bold text-sm mb-4 text-amber-400">🗺 Improvement Roadmap</h3>
+            <h3 class="font-bold text-sm mb-4 text-amber-400">Improvement Roadmap</h3>
             <ol class="space-y-2">
                 @foreach($improvementRoadmap as $i => $item)
                 <li class="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
@@ -394,19 +396,17 @@
     </div>
 
     {{-- Re-analyze and Export --}}
-    <div class="flex flex-wrap items-center justify-end gap-3">
+    <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
         @if($repository->isAnalyzed())
         <a href="{{ route('repositories.export.json', $repository) }}"
-           class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--bg-muted)] hover:bg-[var(--bg-hover)]
-                  border border-[var(--border-color)] text-sm font-medium transition">
+           class="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] px-5 py-2.5 text-sm font-medium transition hover:bg-[var(--bg-hover)] sm:w-auto">
             <svg class="w-4 h-4 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
             Export JSON
         </a>
         <a href="{{ route('repositories.export.markdown', $repository) }}"
-           class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--bg-muted)] hover:bg-[var(--bg-hover)]
-                  border border-[var(--border-color)] text-sm font-medium transition">
+           class="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] px-5 py-2.5 text-sm font-medium transition hover:bg-[var(--bg-hover)] sm:w-auto">
             <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
             </svg>
@@ -415,13 +415,13 @@
         @endif
         
         <form action="{{ route('repositories.analyze', $repository) }}" method="POST"
+              class="w-full sm:w-auto"
               x-data="{ submitting: false }" @submit="submitting = true">
             @csrf
             <button type="submit"
                     :disabled="submitting || {{ $repository->isAnalyzing() ? 'true' : 'false' }}"
                     :class="(submitting || {{ $repository->isAnalyzing() ? 'true' : 'false' }}) ? 'opacity-60 cursor-not-allowed' : ''"
-                    class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--bg-muted)] hover:bg-[var(--bg-hover)]
-                           border border-[var(--border-color)] text-sm font-medium transition">
+                    class="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] px-5 py-2.5 text-sm font-medium transition hover:bg-[var(--bg-hover)] sm:w-auto">
                 <svg x-show="submitting" class="w-4 h-4 text-orange-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>

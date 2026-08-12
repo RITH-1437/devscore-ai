@@ -11,12 +11,8 @@ $iconClass = match ($variant) {
 };
 @endphp
 
-<a href="{{ route('dashboard') }}" {{ $attributes->merge(['class' => 'inline-flex items-center gap-3 shrink-0 ' . $class]) }} aria-label="GitRadar home">
+<a href="{{ route('dashboard') }}" {{ $attributes->class(['inline-flex items-center gap-3 shrink-0']) }} aria-label="GitRadar home">
     <span class="{{ $iconClass }} inline-flex shrink-0 text-[var(--text-primary)] [&>svg]:h-full [&>svg]:w-auto" aria-hidden="true">
         {!! str_replace('<svg', '<svg role="img" aria-label="GitRadar"', file_get_contents(public_path('images/logo.svg'))) !!}
     </span>
-
-    @if($variant === 'full')
-    <p class="text-[var(--text-muted)] text-xs hidden sm:block">AI Portfolio Analyzer</p>
-    @endif
 </a>

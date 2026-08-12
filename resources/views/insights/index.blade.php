@@ -1,20 +1,20 @@
-<x-layouts.app>
+<x-layouts.app title="Insights">
 
-<div class="mx-auto min-w-0 max-w-7xl space-y-8">
+<div class="mx-auto min-w-0 max-w-7xl space-y-6 sm:space-y-8">
 
     {{-- Header --}}
     <div>
-        <h1 class="text-3xl font-black tracking-tight text-[var(--text-primary)]">Insights</h1>
-        <p class="mt-1 max-w-3xl text-sm text-[var(--text-secondary)]">
-            Understand your development portfolio and identify opportunities for growth.
+        <h1 class="page-heading text-[var(--text-primary)]">Insights</h1>
+        <p class="page-subheading max-w-3xl">
+            Portfolio metrics, language distribution, and analysis trends.
         </p>
     </div>
 
     {{-- A. Portfolio Health --}}
     <section class="space-y-4">
         <div>
-            <h2 class="text-lg font-bold text-[var(--text-primary)]">Portfolio Health</h2>
-            <p class="text-sm text-[var(--text-secondary)]">Key metrics across your synced GitHub repositories.</p>
+            <h2 class="section-title">Portfolio health</h2>
+            <p class="section-desc">Key metrics across your synced GitHub repositories.</p>
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -37,9 +37,9 @@
     {{-- B & C. Technology + Repository Quality --}}
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
         {{-- B. Technology / Language Insights --}}
-        <section class="min-w-0 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-card)]">
-            <h2 class="mb-1 text-base font-bold text-[var(--text-primary)]">Technology &amp; Language Insights</h2>
-            <p class="mb-5 text-sm text-[var(--text-secondary)]">Distribution of primary languages across your repositories.</p>
+        <section class="panel min-w-0 p-6">
+            <h2 class="section-title">Technology &amp; languages</h2>
+            <p class="section-desc mb-5">Primary languages across your repositories.</p>
 
             @if($languages->isNotEmpty())
             <div class="space-y-4">
@@ -59,26 +59,26 @@
         </section>
 
         {{-- C. Repository Quality --}}
-        <section class="min-w-0 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-card)]">
-            <h2 class="mb-1 text-base font-bold text-[var(--text-primary)]">Repository Quality</h2>
-            <p class="mb-5 text-sm text-[var(--text-secondary)]">Analysis status, documentation, and activity signals.</p>
+        <section class="panel min-w-0 p-6">
+            <h2 class="section-title">Repository quality</h2>
+            <p class="section-desc mb-5">Analysis status, documentation, and activity signals.</p>
 
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div class="rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] p-4">
                     <p class="text-xs text-[var(--text-muted)]">Analyzed</p>
-                    <p class="mt-1 text-2xl font-black text-[var(--text-primary)]">{{ $analyzedCount }}</p>
+                    <p class="mt-1 stat-value text-2xl">{{ $analyzedCount }}</p>
                 </div>
                 <div class="rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] p-4">
                     <p class="text-xs text-[var(--text-muted)]">Not Analyzed</p>
-                    <p class="mt-1 text-2xl font-black text-[var(--text-primary)]">{{ $notAnalyzedCount }}</p>
+                    <p class="mt-1 stat-value text-2xl">{{ $notAnalyzedCount }}</p>
                 </div>
                 <div class="rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] p-4">
                     <p class="text-xs text-[var(--text-muted)]">High Scoring (75+)</p>
-                    <p class="mt-1 text-2xl font-black text-[var(--success)]">{{ $highScoringRepos->count() }}</p>
+                    <p class="mt-1 stat-value text-2xl text-[var(--success)]">{{ $highScoringRepos->count() }}</p>
                 </div>
                 <div class="rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] p-4">
                     <p class="text-xs text-[var(--text-muted)]">Needs Work (&lt;60)</p>
-                    <p class="mt-1 text-2xl font-black text-[var(--warning)]">{{ $lowScoringRepos->count() }}</p>
+                    <p class="mt-1 stat-value text-2xl text-[var(--warning)]">{{ $lowScoringRepos->count() }}</p>
                 </div>
             </div>
 
@@ -97,9 +97,9 @@
     </div>
 
     {{-- D. AI Insights --}}
-    <section class="min-w-0 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-card)]">
-        <h2 class="mb-1 text-base font-bold text-[var(--text-primary)]">AI Insights</h2>
-        <p class="mb-5 text-sm text-[var(--text-secondary)]">Aggregated findings from completed repository analyses.</p>
+    <section class="panel min-w-0 p-6">
+        <h2 class="section-title">AI findings</h2>
+        <p class="section-desc mb-5">Aggregated results from completed repository analyses.</p>
 
         @if($portfolio->isAnalyzed() && (count($portfolio->strengths) || count($portfolio->weaknesses) || count($portfolio->recommendations)))
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

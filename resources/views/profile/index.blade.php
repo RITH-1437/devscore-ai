@@ -1,6 +1,6 @@
-<x-layouts.app>
+<x-layouts.app title="Profile">
 
-<div class="max-w-7xl mx-auto space-y-8"
+<div class="mx-auto min-w-0 max-w-7xl space-y-6 sm:space-y-8"
      x-data="{
         syncState: 'idle', // idle | loading | success | error
         syncMessage: '',
@@ -44,7 +44,7 @@
 
             <div class="flex-1 min-w-0 text-center sm:text-left">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 min-w-0">
-                    <h1 class="text-2xl font-black tracking-tight text-[var(--text-primary)] break-anywhere">
+                    <h1 class="break-anywhere section-title text-xl sm:text-2xl">
                         {{ $account->name ?: $user->name }}
                     </h1>
                     <a href="https://github.com/{{ $account->username }}" target="_blank" rel="noopener noreferrer"

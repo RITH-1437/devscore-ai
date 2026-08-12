@@ -16,34 +16,23 @@ $rangeLabel = match (true) {
     $score >= 90 => 'Excellent',
     $score >= 75 => 'Strong',
     $score >= 60 => 'Developing',
-    $score >= 40 => 'Needs Improvement',
-    default      => 'Weak',
+    $score >= 40 => 'Needs work',
+    default      => 'Early stage',
 };
 
 $strokeColor = match (true) {
-    $score >= 90 => '#059669',
-    $score >= 75 => '#0891b2',
-    $score >= 60 => '#2563eb',
-    $score >= 40 => '#d97706',
-    default      => '#dc2626',
+    $score >= 75 => 'var(--success)',
+    $score >= 60 => 'var(--primary)',
+    $score >= 40 => 'var(--warning)',
+    default      => 'var(--danger)',
 };
 
-$textColor = match (true) {
-    $score >= 90 => 'text-emerald-600 dark:text-emerald-400',
-    $score >= 75 => 'text-cyan-600 dark:text-cyan-400',
-    $score >= 60 => 'text-blue-600 dark:text-blue-400',
-    $score >= 40 => 'text-amber-600 dark:text-amber-400',
-    default      => 'text-red-600 dark:text-red-400',
+$rangeClass = match (true) {
+    $score >= 75 => 'text-[var(--success)]',
+    $score >= 60 => 'text-[var(--primary)]',
+    $score >= 40 => 'text-[var(--warning)]',
+    default      => 'text-[var(--danger)]',
 };
-
-$rangeColor = match (true) {
-    $score >= 90 => 'text-emerald-600 dark:text-emerald-400',
-    $score >= 75 => 'text-cyan-600 dark:text-cyan-400',
-    $score >= 60 => 'text-blue-600 dark:text-blue-400',
-    $score >= 40 => 'text-amber-600 dark:text-amber-400',
-    default      => 'text-red-600 dark:text-red-400',
-};
-
 @endphp
 
 <div class="flex flex-col items-center gap-2">
@@ -61,13 +50,13 @@ $rangeColor = match (true) {
                     style="transition: stroke-dashoffset 1s ease;"/>
         </svg>
         <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="font-black leading-none {{ $textColor }}" style="font-size: {{ max(18, $size * 0.22) }}px;">{{ $score }}</span>
-            <span class="text-[var(--text-muted)] text-[10px] mt-0.5">/ 100</span>
+            <span class="stat-value leading-none {{ $rangeClass }}" style="font-size: {{ max(18, $size * 0.22) }}px;">{{ $score }}</span>
+            <span class="text-[var(--text-muted)] text-[10px] mt-0.5 font-medium">/ 100</span>
         </div>
     </div>
 
     @if($showRangeLabel)
-    <span class="text-xs font-semibold {{ $rangeColor }}">{{ $rangeLabel }}</span>
+    <span class="text-xs font-semibold {{ $rangeClass }}">{{ $rangeLabel }}</span>
     @endif
 
     @if($label)

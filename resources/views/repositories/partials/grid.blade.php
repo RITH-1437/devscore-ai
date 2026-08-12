@@ -38,7 +38,7 @@
 
 {{-- Repository Grid --}}
 @if($repositories->isNotEmpty())
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-6">
     @foreach($repositories as $repo)
     <x-repo-card :repository="$repo" />
     @endforeach
@@ -53,7 +53,7 @@
 
 @else
 {{-- Empty state --}}
-<div class="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-16 text-center mt-6">
+<div class="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-8 text-center shadow-[var(--shadow-card)] sm:p-16 mt-6">
     <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
          style="background: var(--primary-soft); border: 1px solid var(--primary-soft-border);">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);">

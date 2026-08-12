@@ -1,6 +1,6 @@
-<x-layouts.app>
+<x-layouts.app title="AI Analysis">
 
-<div class="max-w-7xl mx-auto space-y-8"
+<div class="mx-auto min-w-0 max-w-7xl space-y-6 sm:space-y-8"
      x-data="{
         refreshing: false,
         errorMessage: @js(session('error')),
@@ -9,22 +9,23 @@
 
     {{-- Header --}}
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-3xl font-black tracking-tight text-[var(--text-primary)]">AI Analysis</h1>
-            <p class="text-[var(--text-secondary)] mt-1 text-sm max-w-2xl">
-                Portfolio-wide insights from your GitHub repositories, powered by GitRadar.
+        <div class="min-w-0">
+            <h1 class="page-heading text-[var(--text-primary)]">AI Analysis</h1>
+            <p class="page-subheading max-w-2xl">
+                Portfolio-wide insights from your GitHub repositories.
             </p>
         </div>
 
         <form action="{{ route('analysis.run') }}"
               method="POST"
+              class="w-full sm:w-auto"
               @submit="if (refreshing) { $event.preventDefault(); } else { refreshing = true; }">
             @csrf
             <button type="submit"
                     :disabled="refreshing"
                     :aria-busy="refreshing.toString()"
                     :class="refreshing ? 'opacity-70 cursor-not-allowed' : 'hover:border-[var(--primary)]/40 hover:bg-[var(--bg-hover)]'"
-                    class="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] px-5 py-2.5 text-sm font-semibold text-[var(--text-primary)] shadow-[var(--shadow-card)] transition-all">
+                    class="touch-target inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] px-5 py-2.5 text-sm font-semibold text-[var(--text-primary)] shadow-[var(--shadow-card)] transition-all sm:w-auto">
                 <svg class="h-4 w-4" :class="refreshing ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
@@ -63,7 +64,7 @@
     </template>
 
     {{-- Portfolio header --}}
-    <section class="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-card)] sm:p-8">
+    <section class="panel p-6 sm:p-8">
         <div class="grid gap-8 lg:grid-cols-[auto,1fr] lg:items-center">
             <div class="flex justify-center lg:justify-start">
                 @if($portfolio->isAnalyzed())
@@ -81,7 +82,7 @@
             </div>
 
             <div class="min-w-0">
-                <h2 class="text-xl font-black text-[var(--text-primary)]">Portfolio Assessment</h2>
+                <h2 class="section-title">Portfolio assessment</h2>
                 <p class="mt-2 text-sm text-[var(--text-secondary)]">
                     Based on {{ $portfolio->totalRepositories }} repositories across {{ $languageCount }} languages.
                     @if(! $portfolio->isAnalyzed())
@@ -94,25 +95,25 @@
                 <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                     <div class="rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] px-3 py-3">
                         <p class="text-xs text-[var(--text-muted)]">Overall Score</p>
-                        <p class="mt-1 text-lg font-black text-[var(--text-primary)]">
+                        <p class="mt-1 stat-value text-lg">
                             {{ $portfolio->isAnalyzed() ? $portfolio->score . '/100' : '—' }}
                         </p>
                     </div>
                     <div class="rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] px-3 py-3">
                         <p class="text-xs text-[var(--text-muted)]">Repos Analyzed</p>
-                        <p class="mt-1 text-lg font-black text-[var(--text-primary)]">{{ $portfolio->analyzedRepositories }}/{{ $portfolio->totalRepositories }}</p>
+                        <p class="mt-1 stat-value text-lg">{{ $portfolio->analyzedRepositories }}/{{ $portfolio->totalRepositories }}</p>
                     </div>
                     <div class="rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] px-3 py-3">
                         <p class="text-xs text-[var(--text-muted)]">Languages</p>
-                        <p class="mt-1 text-lg font-black text-[var(--text-primary)]">{{ $languageCount }}</p>
+                        <p class="mt-1 stat-value text-lg">{{ $languageCount }}</p>
                     </div>
                     <div class="rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] px-3 py-3">
                         <p class="text-xs text-[var(--text-muted)]">Strengths</p>
-                        <p class="mt-1 text-lg font-black text-[var(--text-primary)]">{{ count($portfolio->strengths) }}</p>
+                        <p class="mt-1 stat-value text-lg">{{ count($portfolio->strengths) }}</p>
                     </div>
                     <div class="rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)] px-3 py-3 col-span-2 sm:col-span-1">
                         <p class="text-xs text-[var(--text-muted)]">Improve / Recs</p>
-                        <p class="mt-1 text-lg font-black text-[var(--text-primary)]">{{ count($portfolio->weaknesses) }} / {{ count($portfolio->recommendations) }}</p>
+                        <p class="mt-1 stat-value text-lg">{{ count($portfolio->weaknesses) }} / {{ count($portfolio->recommendations) }}</p>
                     </div>
                 </div>
             </div>
@@ -155,7 +156,7 @@
             <a href="{{ route('repositories.show', $topRepoByScore) }}" class="block rounded-xl p-3 transition hover:bg-[var(--bg-card)]/60">
                 <p class="font-bold text-[var(--text-primary)]">{{ $topRepoByScore->name }}</p>
                 <p class="mt-1 text-xs text-[var(--text-secondary)] line-clamp-2">{{ $topRepoByScore->description ?: 'No description.' }}</p>
-                <p class="mt-3 text-2xl font-black text-[var(--success)]">{{ $topRepoByScore->score }}/100</p>
+                <p class="mt-3 stat-value text-2xl text-[var(--success)]">{{ $topRepoByScore->score }}/100</p>
             </a>
         </div>
         @endif
@@ -166,7 +167,7 @@
             <a href="{{ route('repositories.show', $weakestRepo) }}" class="block rounded-xl p-3 transition hover:bg-[var(--bg-card)]/60">
                 <p class="font-bold text-[var(--text-primary)]">{{ $weakestRepo->name }}</p>
                 <p class="mt-1 text-xs text-[var(--text-secondary)] line-clamp-2">{{ $weakestRepo->description ?: 'No description.' }}</p>
-                <p class="mt-3 text-2xl font-black text-[var(--warning)]">{{ $weakestRepo->score }}/100</p>
+                <p class="mt-3 stat-value text-2xl text-[var(--warning)]">{{ $weakestRepo->score }}/100</p>
             </a>
         </div>
         @endif
@@ -184,19 +185,25 @@
             <p class="text-xs text-[var(--text-muted)]">{{ $analyzedRepos->count() }} repositories analyzed</p>
         </div>
 
-        <div class="overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]">
-            <div class="overflow-x-auto">
+        <div class="panel overflow-hidden lg:hidden">
+            @foreach($analyzedRepos as $repo)
+            <x-mobile-analysis-row :repository="$repo" />
+            @endforeach
+        </div>
+
+        <div class="panel hidden overflow-hidden lg:block">
+            <div class="table-scroll">
                 <table class="w-full min-w-[56rem]">
                     <thead>
                         <tr class="border-b border-[var(--border-color)]">
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Repository</th>
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] hidden md:table-cell">Language</th>
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">AI Score</th>
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] hidden lg:table-cell">Difficulty</th>
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] hidden lg:table-cell">Developer Level</th>
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] hidden xl:table-cell">Recruiter</th>
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] hidden xl:table-cell">Hiring Prob.</th>
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] hidden xl:table-cell">Experience</th>
+                            <th class="table-head">Repository</th>
+                            <th class="table-head hidden md:table-cell">Language</th>
+                            <th class="table-head">AI score</th>
+                            <th class="table-head hidden lg:table-cell">Difficulty</th>
+                            <th class="table-head hidden lg:table-cell">Developer level</th>
+                            <th class="table-head hidden xl:table-cell">Recruiter</th>
+                            <th class="table-head hidden xl:table-cell">Hiring prob.</th>
+                            <th class="table-head hidden xl:table-cell">Experience</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[var(--border-color)]">
@@ -254,16 +261,46 @@
     @if($recentAnalyses->isNotEmpty())
     <section>
         <h2 class="mb-4 text-base font-bold text-[var(--text-primary)]">Recent AI Analyses</h2>
-        <div class="overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]">
-            <div class="overflow-x-auto">
+        <div class="panel overflow-hidden md:hidden">
+            <div class="divide-y divide-[var(--border-color)]">
+                @foreach($recentAnalyses as $analysis)
+                <div class="px-4 py-4">
+                    @if($analysis->repository)
+                    <a href="{{ route('repositories.show', $analysis->repository) }}" class="break-anywhere text-sm font-medium text-[var(--text-primary)] transition hover:text-[var(--primary)]">
+                        {{ $analysis->repository->name }}
+                    </a>
+                    @else
+                    <span class="text-sm text-[var(--text-muted)]">Deleted</span>
+                    @endif
+                    <dl class="mt-2 grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <dt class="text-[var(--text-muted)]">Score</dt>
+                            <dd class="font-bold text-[var(--text-primary)]">{{ $analysis->score }}/100</dd>
+                        </div>
+                        <div>
+                            <dt class="text-[var(--text-muted)]">Level</dt>
+                            <dd class="text-[var(--text-secondary)]">{{ ucfirst($analysis->portfolio_level ?? '—') }}</dd>
+                        </div>
+                        <div class="col-span-2">
+                            <dt class="text-[var(--text-muted)]">Analyzed</dt>
+                            <dd class="text-[var(--text-muted)]">{{ $analysis->updated_at->diffForHumans() }}</dd>
+                        </div>
+                    </dl>
+                </div>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="panel hidden overflow-hidden md:block">
+            <div class="table-scroll">
                 <table class="w-full min-w-[40rem]">
                     <thead>
                         <tr class="border-b border-[var(--border-color)]">
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Repository</th>
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] hidden md:table-cell">Score</th>
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] hidden md:table-cell">Level</th>
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] hidden lg:table-cell">Model</th>
-                            <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Analyzed</th>
+                            <th class="table-head">Repository</th>
+                            <th class="table-head hidden md:table-cell">Score</th>
+                            <th class="table-head hidden md:table-cell">Level</th>
+                            <th class="table-head hidden lg:table-cell">Model</th>
+                            <th class="table-head">Analyzed</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[var(--border-color)]">

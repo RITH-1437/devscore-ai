@@ -10,28 +10,20 @@
 @php
 $toneStyles = [
     'success' => [
-        'panel' => 'border-[var(--success-soft-border)] bg-[var(--success-soft)]',
+        'accent' => 'var(--success)',
         'heading' => 'text-[var(--success)]',
-        'itemBorder' => 'border-[var(--border-color)]',
-        'bullet' => 'text-[var(--success)]',
     ],
     'danger' => [
-        'panel' => 'border-[var(--danger-soft-border)] bg-[var(--danger-soft)]',
+        'accent' => 'var(--danger)',
         'heading' => 'text-[var(--danger)]',
-        'itemBorder' => 'border-[var(--border-color)]',
-        'bullet' => 'text-[var(--danger)]',
     ],
     'info' => [
-        'panel' => 'border-[var(--info-soft-border)] bg-[var(--info-soft)]',
+        'accent' => 'var(--info)',
         'heading' => 'text-[var(--info)]',
-        'itemBorder' => 'border-[var(--border-color)]',
-        'bullet' => 'text-[var(--info)]',
     ],
     'neutral' => [
-        'panel' => 'border-[var(--border-color)] bg-[var(--bg-card)]',
+        'accent' => 'var(--primary)',
         'heading' => 'text-[var(--text-primary)]',
-        'itemBorder' => 'border-[var(--border-color)]',
-        'bullet' => 'text-[var(--primary)]',
     ],
 ];
 $style = $toneStyles[$tone] ?? $toneStyles['neutral'];
@@ -40,36 +32,30 @@ $hiddenItems = array_slice($items, $limit);
 $hasMore = count($hiddenItems) > 0;
 @endphp
 
-<div {{ $attributes->merge(['class' => 'rounded-2xl border p-5 shadow-[var(--shadow-card)] transition-colors hover:border-[var(--border-strong)] ' . $style['panel']]) }}
+<div {{ $attributes->merge(['class' => 'panel p-5']) }}
+     style="border-top: 2px solid {{ $style['accent'] }};"
      x-data="{ expanded: false }">
-    <div class="mb-4 flex items-center gap-2">
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-muted)]">
-            <svg class="h-4 w-4 {{ $style['heading'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                {!! $icon !!}
-            </svg>
-        </div>
-        <div>
-            <h3 class="text-sm font-bold {{ $style['heading'] }}">{{ $title }}</h3>
-            <p class="text-xs text-[var(--text-muted)]">{{ count($items) }} item{{ count($items) === 1 ? '' : 's' }}</p>
-        </div>
+    <div class="mb-4">
+        <p class="section-kicker">{{ $title }}</p>
+        <p class="mt-1 text-xs text-[var(--text-muted)]">{{ count($items) }} finding{{ count($items) === 1 ? '' : 's' }}</p>
     </div>
 
     @if(count($items) > 0)
-    <ul class="space-y-0">
+    <ul class="space-y-0 divide-y divide-[var(--border-color)]">
         @foreach($visibleItems as $item)
-        <li class="flex items-start gap-2 border-b py-2.5 last:border-0 {{ $style['itemBorder'] }}">
-            <span class="mt-0.5 shrink-0 text-sm {{ $style['bullet'] }}" aria-hidden="true">•</span>
-            <span class="text-sm leading-6 text-[var(--text-secondary)]">{{ $item }}</span>
+        <li class="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+            <span class="mt-2 h-1 w-1 shrink-0 rounded-full" style="background: {{ $style['accent'] }};" aria-hidden="true"></span>
+            <span class="break-anywhere text-sm leading-6 text-[var(--text-secondary)]">{{ $item }}</span>
         </li>
         @endforeach
 
         @if($hasMore)
         <template x-if="expanded">
-            <div class="space-y-0">
+            <div class="divide-y divide-[var(--border-color)]">
                 @foreach($hiddenItems as $item)
-                <div class="flex items-start gap-2 border-b py-2.5 last:border-0 {{ $style['itemBorder'] }}">
-                    <span class="mt-0.5 shrink-0 text-sm {{ $style['bullet'] }}" aria-hidden="true">•</span>
-                    <span class="text-sm leading-6 text-[var(--text-secondary)]">{{ $item }}</span>
+                <div class="flex items-start gap-3 py-3">
+                    <span class="mt-2 h-1 w-1 shrink-0 rounded-full" style="background: {{ $style['accent'] }};" aria-hidden="true"></span>
+                    <span class="break-anywhere text-sm leading-6 text-[var(--text-secondary)]">{{ $item }}</span>
                 </div>
                 @endforeach
             </div>
@@ -86,6 +72,6 @@ $hasMore = count($hiddenItems) > 0;
     </button>
     @endif
     @else
-    <p class="text-sm italic text-[var(--text-muted)]">{{ $empty }}</p>
+    <p class="text-sm text-[var(--text-muted)]">{{ $empty }}</p>
     @endif
 </div>

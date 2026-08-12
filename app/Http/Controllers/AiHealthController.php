@@ -18,16 +18,14 @@ class AiHealthController extends Controller
 
         if ($provider !== 'gemini') {
             return response()->json([
-                'provider'   => $provider,
-                'configured' => (string) config('openrouter.api_key', '') !== '',
-                'model'      => config('openrouter.default_model') ?: 'openrouter chain',
-                'available'  => null,
-                'status'     => (string) config('openrouter.api_key', '') !== '' ? 'configured' : 'misconfigured',
+                'status'  => (string) config('openrouter.api_key', '') !== '' ? 'ok' : 'misconfigured',
             ]);
         }
 
         $health = $gemini->healthCheck();
 
-        return response()->json($health);
+        return response()->json([
+            'status' => ($health['available'] ?? false) ? 'ok' : 'degraded',
+        ]);
     }
 }

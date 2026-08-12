@@ -1,4 +1,4 @@
-<x-layouts.app>
+<x-layouts.app title="Profile">
 
 <div class="max-w-3xl mx-auto">
     <div class="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 sm:p-8 text-center shadow-[var(--shadow-card)]">
