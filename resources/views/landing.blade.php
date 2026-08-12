@@ -87,17 +87,14 @@
             @php
             $features = [
                 [
-                    'accent' => 'border-l-orange-500',
                     'title' => 'Portfolio score',
                     'desc'  => 'A 0–100 score across code quality, docs, activity, and how your work reads to hiring teams.',
                 ],
                 [
-                    'accent' => 'border-l-violet-500',
                     'title' => 'Recruiter lens',
                     'desc'  => 'See which projects stand out, which look unfinished, and where your profile loses credibility.',
                 ],
                 [
-                    'accent' => 'border-l-orange-400',
                     'title' => 'Next steps',
                     'desc'  => 'Concrete recommendations per repo — README gaps, showcase projects, and skills to highlight.',
                 ],
@@ -105,8 +102,8 @@
             @endphp
 
             @foreach($features as $f)
-            <div class="rounded-xl border border-white/[0.08] border-l-[3px] {{ $f['accent'] }} bg-white/[0.03] p-5 sm:p-6">
-                <h3 class="mb-2 text-base font-semibold">{{ $f['title'] }}</h3>
+            <div class="rounded-xl border border-white/[0.08] bg-white/[0.03] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.18)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.14] hover:bg-white/[0.05] hover:shadow-[0_4px_14px_rgba(0,0,0,0.22)] sm:p-6">
+                <h3 class="mb-2 text-base font-semibold text-white">{{ $f['title'] }}</h3>
                 <p class="text-sm leading-relaxed text-slate-400">{{ $f['desc'] }}</p>
             </div>
             @endforeach
